@@ -100,6 +100,20 @@ def EdgeDetect(image, sigma, theta, method):
     else:
         print("Error: method has to be either \"linear\" or \"nonlinear\"")
 
+def qualitycriterion(real, computed):
+    T = real
+    D = computed
+    DT = (D & T)
+
+    cardT = T.sum()
+    cardD = D.sum()
+    cardDT = DT.sum()
+
+    prTD = cardDT/cardT
+    prDT = cardDT/cardD
+
+    C = (prDT + prTD)/2
+    return C
 
 # ================= END FUNCTIONS ================= #
 
@@ -125,17 +139,30 @@ plt.pause(0.01)
 for index, img in enumerate(noised_images):
     N1 = EdgeDetect(img, sigma[index], theta[index], "linear")
     N2 = EdgeDetect(img, sigma[index], theta[index], "nonlinear")
-    fig, axs = plt.subplots(1,3)
-    axs[0].imshow(img, cmap='gray')
-    axs[0].set_title("Noised Image")
-    axs[1].imshow(N1, cmap='gray')
-    axs[1].set_title("Linear edge detection")
-    axs[2].imshow(N2, cmap='gray')
-    axs[2].set_title("Non linear edge detection")
+
+    # the non linear method gives the best results,
+    # therefore we name it D and continue our evaluation
+    D = N2
+    cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+    M = cv2.dilate(image, cross) - cv2.erode(image, cross)
+    T = ( M > 0.2).astype(np.uint8)
+    print(T.shape)
+
+    fig, axs = plt.subplots(2,2)
+    axs[0, 0].imshow(img, cmap='gray')
+    axs[0, 0].set_title("Noised Image")
+    axs[0, 1].imshow(N1, cmap='gray')
+    axs[0, 1].set_title("Linear edge detection")
+    axs[1, 0].imshow(N2, cmap='gray')
+    axs[1, 0].set_title("Non linear edge detection")
+    axs[1, 1].imshow(T, cmap='gray')
+    axs[1, 1].set_title("Actual Edges")
     plt.show(block=False)
     plt.pause(0.01)
 
+    C = qualitycriterion(T, D)
+    print(f"The quality criterion is C[{index}] = {C}")
+    
 plt.show()
-
 
 
