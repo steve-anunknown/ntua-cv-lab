@@ -2,9 +2,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-# enable interactive mode
-# plt.ion()
-
 # ================= BEG FUNCTIONS ================= #
 def getpsnr(image, noisestd):
     return 20*log10((np.max(image)-np.min(image))/noisestd)
@@ -121,7 +118,8 @@ theta = [0.2, 0.2]
 fig, axs = plt.subplots(1,1)
 axs.imshow(image, cmap='gray')
 axs.set_title("Original Image")
-plt.show()
+plt.show(block=False)
+plt.pause(0.01)
 
 
 for index, img in enumerate(noised_images):
@@ -134,7 +132,10 @@ for index, img in enumerate(noised_images):
     axs[1].set_title("Linear edge detection")
     axs[2].imshow(N2, cmap='gray')
     axs[2].set_title("Non linear edge detection")
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.01)
+
+plt.show()
 
 
 
