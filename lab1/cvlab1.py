@@ -57,45 +57,84 @@ def myfilter(sigma, method):
         return logkernel
     print("Error: method has to be either \"gaussian\" or \"log\"")
 
+def EdgeDetect(image, sigma, theta, method):
+    if (method == "linear"):
+        # construct the laplacian of gaussian kernel
+        # and use it to filter the image
+        logfilter = myfilter(sigma, "log")
+        imgloged = cv2.filter2D(image, -1, logfilter)
+
+        L = imgloged
+        X = (L >= 0).astype(np.uint8)
+        cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+        Y = (cv2.dilate(X, cross)) - (cv2.erode(X, cross))
+
+        gaussf = myfilter(sigma, "gaussian")
+        smooth = cv2.filter2D(image, -1, gaussf)
+        gradx, grady = np.gradient(smooth)
+        grad = np.abs(gradx + 1j * grady)
+        #gradx = cv2.Sobel(img_gaussed, cv2.CV_64F, 1, 0)
+        #grady = cv2.Sobel(img_gaussed, cv2.CV_64F, 0, 1)
+        #grad = np.abs(gradx + 1j * grady)
+        D = ((Y == 1) & (grad > (theta * np.max(grad))))
+
+        return D
+    elif (method == "nonlinear"):
+        # construct a gaussian kernel and use it
+        # to smoothen the image. Then, perform
+        # morphological operations on the smoothed image
+        gaussf = myfilter(sigma, "gaussian")
+        smooth = cv2.filter2D(image, -1, gaussf)
+        cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+        imgloged = cv2.dilate(smooth, cross) + cv2.erode(smooth, cross) - 2*smooth
+
+        L = imgloged
+        X = (L >= 0).astype(np.uint8)
+        Y = (cv2.dilate(X, cross)) - (cv2.erode(X, cross))
+
+        gradx, grady = np.gradient(smooth)
+        grad = np.abs(gradx + 1j * grady)
+        #gradx = cv2.Sobel(img_gaussed, cv2.CV_64F, 1, 0)
+        #grady = cv2.Sobel(img_gaussed, cv2.CV_64F, 0, 1)
+        #grad = np.abs(gradx + 1j * grady)
+        D = ((Y == 1) & (grad > (theta * np.max(grad))))
+
+        return D
+    else:
+        print("Error: method has to be either \"linear\" or \"nonlinear\"")
+
+
 # ================= END FUNCTIONS ================= #
 
 # read the image and convert to gray scale
 image = cv2.imread("cv23_lab1_part12_material/edgetest_23.png", cv2.IMREAD_GRAYSCALE)
 
 # add noise to the images. 10db and 20db
+# in the psnr context, less dBs equals more noise
 image10db = image + np.random.normal(0, getstd(image, 10), image.shape)
 image20db = image + np.random.normal(0, getstd(image, 20), image.shape)
 
 noised_images = [image10db, image20db]
-for nsd_img in noised_images:
-    # plot the images
-    fig, axs = plt.subplots(1, 2)
-    axs[0].imshow(image, cmap='gray')
-    axs[1].imshow(nsd_img, cmap='gray')
-    axs[0].set_title("Original Image")
-    axs[1].set_title("Image with gaussian noise")
+sigma = [1.5, 3]
+theta = [0.2, 0.2]
+
+fig, axs = plt.subplots(1,1)
+axs.imshow(image, cmap='gray')
+axs.set_title("Original Image")
+plt.show()
+
+
+for index, img in enumerate(noised_images):
+    N1 = EdgeDetect(img, sigma[index], theta[index], "linear")
+    N2 = EdgeDetect(img, sigma[index], theta[index], "nonlinear")
+    fig, axs = plt.subplots(1,3)
+    axs[0].imshow(img, cmap='gray')
+    axs[0].set_title("Noised Image")
+    axs[1].imshow(N1, cmap='gray')
+    axs[1].set_title("Linear edge detection")
+    axs[2].imshow(N2, cmap='gray')
+    axs[2].set_title("Non linear edge detection")
     plt.show()
 
-    # It can be seen that, indeed, the 10db PSNR gaussian noise
-    # is more intense than the 20db PSNR one.
-    sigma = 1.5 # 1.5 for 10db, 3 for 20db
-    gaussianfilter = myfilter(sigma, "gaussian")
-    img_gaussed = cv2.filter2D(nsd_img, -1, gaussianfilter)
 
-    # laplacian on gaussian
-    logfilter1 = myfilter(sigma, "log")
-    img_loged1 = cv2.filter2D(nsd_img, -1, logfilter1)
 
-    # non linear approximation of laplacian on gaussian
-    # using morphological operators
-    cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
-    img_loged2 = cv2.dilate(img_gaussed, cross) + cv2.erode(img_gaussed, cross) - 2*img_gaussed
-
-    fig, axs = plt.subplots(1, 3)
-    axs[0].imshow(img_gaussed, cmap='gray')
-    axs[0].set_title("Gaussianly Smoothed Image")
-    axs[1].imshow(img_loged1, cmap='gray')
-    axs[1].set_title("LoGed Image (Linear Approximation)")
-    axs[2].imshow(img_loged2, cmap='gray')
-    axs[2].set_title("LoGed Image (Non Linear Approximation)")
-    plt.show()
