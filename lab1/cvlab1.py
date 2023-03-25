@@ -74,7 +74,8 @@ for nsd_img in noised_images:
     axs[1].imshow(nsd_img, cmap='gray')
     axs[0].set_title("Original Image")
     axs[1].set_title("Image with gaussian noise")
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.01)
 
     # It can be seen that, indeed, the 10db PSNR gaussian noise
     # is more intense than the 20db PSNR one.
@@ -98,4 +99,7 @@ for nsd_img in noised_images:
     axs[1].set_title("LoGed Image (Linear Approximation)")
     axs[2].imshow(img_loged2, cmap='gray')
     axs[2].set_title("LoGed Image (Non Linear Approximation)")
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.01)
+
+plt.show()
