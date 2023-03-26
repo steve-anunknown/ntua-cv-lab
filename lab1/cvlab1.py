@@ -1,6 +1,8 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from cv23_lab1_part2_utils import interest_points_visualization
+from cv23_lab1_part2_utils import disk_strel
 
 # ================= BEG FUNCTIONS ================= #
 def getpsnr(image, noisestd):
@@ -25,7 +27,7 @@ def my2dconv(image, kernel):
 def myfilter(sigma, method):
     if (not (method == "gaussian" or method == "log")):
         print("Error: method has to be either \"gaussian\" or \"log\"")
-        return
+        exit(2)
     n = int(np.ceil(3*sigma)*2 + 1)
     # generating the kernels using meshgrid is
     # said to be more accurate than multiplying
@@ -52,7 +54,7 @@ def myfilter(sigma, method):
 def EdgeDetect(image, sigma, theta, method):
     if (not (method == "linear" or method == "nonlinear")):
         print("Error: method has to be either \"linear\" or \"nonlinear\"")
-        return
+        exit(2)
     gaussf = myfilter(sigma, "gaussian")
     smooth = cv2.filter2D(image, -1, gaussf)
     cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
@@ -89,6 +91,42 @@ def qualitycriterion(real, computed):
 
     C = (prDT + prTD)/2
     return C
+
+def CornerDetection(image, sigma, rho, theta, k):
+    # define the filters according to the arguments
+    Gs = myfilter(sigma, "gaussian")
+    Gr = myfilter(rho, "gaussian")
+    # smoothen the image
+    smooth = cv2.filter2D(image, -1, Gs)
+    # calculate the gradient on both directions 
+    gradx, grady = np.gradient(smooth)
+    # calculate whatevere these elements are 
+    j1 = cv2.filter2D(gradx * gradx, -1, Gr)
+    j2 = cv2.filter2D(gradx * grady, -1, Gr)
+    j3 = cv2.filter2D(grady * grady, -1, Gr)
+    # calculate the eigenvalues of J = [j1 j2 j3]
+    lplus = 1/2*(j1 + j3 + np.sqrt( (j1 - j3)**2 + 4*j2**2))
+    lminus = (j1 + j3) - lplus 
+    # extract the following cornerness criterion
+    r = lplus * lminus - k*((lplus + lminus)**2)
+    # evaluate the following 2 conditions 
+    # condition 1
+    ns = np.ceil(3*sigma)*2 + 1
+    bsq = disk_strel(ns)
+    cond1 = ( r == cv2.dilate(r, bsq) )
+    # condition 2
+    maxr = np.max(r)
+    cond2 = ( r > theta * maxr )
+    # choose the pixels that satisfy both of them
+    # return their coordinates and their scale
+    x, y = np.where(cond1 & cond2)
+    # for compatibility with the utility function
+    # provided by the lab staff, the y coordinate
+    # has to come before the x coordinate
+    indices = np.column_stack((y,x))
+    scale = sigma*np.ones((indices.shape[0], 1))
+    corners = np.concatenate((indices, scale), axis=1)
+    return corners
 
 # ================= END FUNCTIONS ================= #
 
@@ -180,6 +218,16 @@ plt.pause(0.01)
 
 C = qualitycriterion(T, D)
 print(f"The quality criterion is C[{index}] = {C}")
+
+# ================= END REAL IMAGE PROCESSING ================= #
+# =================   BEG CORNERS DETECTION   ================= #
+
+kyoto = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg")
+kyoto = kyoto.astype(np.float64)/kyoto.max()
+gray = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg", cv2.IMREAD_GRAYSCALE)
+corners = CornerDetection(gray, 2, 2.5, 0.05, 0.1)
+print(f"corners shape is {corners.shape}")
+interest_points_visualization(kyoto, corners, None)
 
 plt.show()
 
