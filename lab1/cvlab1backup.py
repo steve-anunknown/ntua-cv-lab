@@ -82,12 +82,31 @@ def EdgeDetect(image, sigma, theta, method):
         # morphological operations on the smoothed image
         gaussf = myfilter(sigma, "gaussian")
         smooth = cv2.filter2D(image, -1, gaussf)
+       
+        # USED FOR DEBUGGING
+        fig, axs = plt.subplots(1,1)
+        axs.imshow(smooth, cmap='gray')
+        axs.set_title("Smoothed Image")
+        plt.show(block=False)
+        plt.pause(0.01)
+        
         cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
         imgloged = cv2.dilate(smooth, cross) + cv2.erode(smooth, cross) - 2*smooth
 
         L = imgloged
+        # USED FOR DEBUGGING
+        print(np.min(L), np.max(L))
         X = (L >= 0).astype(np.uint8)
+        print(np.min(X), np.max(X))
+
         Y = (cv2.dilate(X, cross)) - (cv2.erode(X, cross))
+
+        # USED FOR DEBUGGING
+        fig, axs = plt.subplots(1,1)
+        axs.imshow(L, cmap='gray')
+        axs.set_title("Almost Done Image")
+        plt.show(block=False)
+        plt.pause(0.01)
 
         gradx, grady = np.gradient(smooth)
         grad = np.abs(gradx + 1j * grady)
@@ -117,17 +136,9 @@ def qualitycriterion(real, computed):
 
 # ================= END FUNCTIONS ================= #
 
-# read the image and convert to gray scale
+# read the image, convert to gray scale and normalize it
 image = cv2.imread("cv23_lab1_part12_material/edgetest_23.png", cv2.IMREAD_GRAYSCALE)
-
-# add noise to the images. 10db and 20db
-# in the psnr context, less dBs equals more noise
-image10db = image + np.random.normal(0, getstd(image, 10), image.shape)
-image20db = image + np.random.normal(0, getstd(image, 20), image.shape)
-
-noised_images = [image10db, image20db]
-sigma = [1.5, 3]
-theta = [0.2, 0.2]
+image = image.astype(np.float)/image.max()
 
 fig, axs = plt.subplots(1,1)
 axs.imshow(image, cmap='gray')
@@ -135,6 +146,17 @@ axs.set_title("Original Image")
 plt.show(block=False)
 plt.pause(0.01)
 
+# add noise to the images. 10db and 20db
+# in the psnr context, less dBs equals more noise
+image10db = image + np.random.normal(0, getstd(image, 10), image.shape)
+image20db = image + np.random.normal(0, getstd(image, 20), image.shape)
+
+# Play around with sigma and theta in order to
+# obtain the best results. 
+noised_images = [image10db, image20db]
+sigma = [1.5, 3]
+theta = [0.2, 0.2]
+thetareal = 0.01
 
 for index, img in enumerate(noised_images):
     N1 = EdgeDetect(img, sigma[index], theta[index], "linear")
@@ -145,7 +167,7 @@ for index, img in enumerate(noised_images):
     D = N2
     cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
     M = cv2.dilate(image, cross) - cv2.erode(image, cross)
-    T = ( M > 0.2).astype(np.uint8)
+    T = ( M > thetareal ).astype(np.uint8)
     print(T.shape)
 
     fig, axs = plt.subplots(2,2)
@@ -162,7 +184,47 @@ for index, img in enumerate(noised_images):
 
     C = qualitycriterion(T, D)
     print(f"The quality criterion is C[{index}] = {C}")
-    
+
+
+# ================= BEG REAL IMAGE PROCESSING ================= #
+
+# read image and normalize it
+kyoto = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg", cv2.IMREAD_GRAYSCALE)
+kyoto = kyoto.astype(np.float)/kyoto.max()
+
+# play around with sigma and theta
+# big sigma => much smoothing => not fine details
+# big theta => less edges, small theta => many edges
+
+sigma = 1.5
+theta = 0.2
+thetareal = 0.14
+
+N1 = EdgeDetect(kyoto, sigma, theta, "linear")
+N2 = EdgeDetect(kyoto, sigma, theta, "nonlinear")
+
+# the non linear method gives the best results,
+# therefore we name it D and continue our evaluation
+D = N2
+cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+M = cv2.dilate(kyoto, cross) - cv2.erode(kyoto, cross)
+T = ( M > thetareal ).astype(np.uint8)
+
+fig, axs = plt.subplots(2,2)
+axs[0, 0].imshow(kyoto, cmap='gray')
+axs[0, 0].set_title("Noised Image")
+axs[0, 1].imshow(T, cmap='gray')
+axs[0, 1].set_title("Actual Edges")
+axs[1, 0].imshow(N1, cmap='gray')
+axs[1, 0].set_title("Linear edge detection")
+axs[1, 1].imshow(N2, cmap='gray')
+axs[1, 1].set_title("Non Linear edge detection")
+plt.show(block=False)
+plt.pause(0.01)
+
+C = qualitycriterion(T, D)
+print(f"The quality criterion is C[{index}] = {C}")
+
 plt.show()
 
 
