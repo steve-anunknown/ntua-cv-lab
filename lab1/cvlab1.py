@@ -136,8 +136,9 @@ def qualitycriterion(real, computed):
 
 # ================= END FUNCTIONS ================= #
 
-# read the image and convert to gray scale
+# read the image, convert to gray scale and normalize it
 image = cv2.imread("cv23_lab1_part12_material/edgetest_23.png", cv2.IMREAD_GRAYSCALE)
+image = image.astype(np.float)/image.max()
 
 fig, axs = plt.subplots(1,1)
 axs.imshow(image, cmap='gray')
@@ -155,6 +156,7 @@ image20db = image + np.random.normal(0, getstd(image, 20), image.shape)
 noised_images = [image10db, image20db]
 sigma = [1.5, 3]
 theta = [0.2, 0.2]
+thetareal = 0.01
 
 for index, img in enumerate(noised_images):
     N1 = EdgeDetect(img, sigma[index], theta[index], "linear")
@@ -165,7 +167,7 @@ for index, img in enumerate(noised_images):
     D = N2
     cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
     M = cv2.dilate(image, cross) - cv2.erode(image, cross)
-    T = ( M > 0.2).astype(np.uint8)
+    T = ( M > thetareal ).astype(np.uint8)
     print(T.shape)
 
     fig, axs = plt.subplots(2,2)
@@ -186,14 +188,17 @@ for index, img in enumerate(noised_images):
 
 # ================= BEG REAL IMAGE PROCESSING ================= #
 
+# read image and normalize it
 kyoto = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg", cv2.IMREAD_GRAYSCALE)
+kyoto = kyoto.astype(np.float)/kyoto.max()
 
 # play around with sigma and theta
 # big sigma => much smoothing => not fine details
 # big theta => less edges, small theta => many edges
 
 sigma = 1.5
-theta = 1.0
+theta = 0.2
+thetareal = 0.14
 
 N1 = EdgeDetect(kyoto, sigma, theta, "linear")
 N2 = EdgeDetect(kyoto, sigma, theta, "nonlinear")
@@ -203,12 +208,12 @@ N2 = EdgeDetect(kyoto, sigma, theta, "nonlinear")
 D = N2
 cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
 M = cv2.dilate(kyoto, cross) - cv2.erode(kyoto, cross)
-T = ( M > 0.8 ).astype(np.uint8)
+T = ( M > thetareal ).astype(np.uint8)
 
 fig, axs = plt.subplots(2,2)
 axs[0, 0].imshow(kyoto, cmap='gray')
 axs[0, 0].set_title("Noised Image")
-axs[0, 1].imshow(M, cmap='gray')
+axs[0, 1].imshow(T, cmap='gray')
 axs[0, 1].set_title("Actual Edges")
 axs[1, 0].imshow(N1, cmap='gray')
 axs[1, 0].set_title("Linear edge detection")
