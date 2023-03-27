@@ -105,8 +105,14 @@ def CornerDetection(image, sigma, rho, theta, k):
     j2 = cv2.filter2D(gradx * grady, -1, Gr)
     j3 = cv2.filter2D(grady * grady, -1, Gr)
     # calculate the eigenvalues of J = [j1 j2 j3]
-    lplus = 1/2*(j1 + j3 + np.sqrt( (j1 - j3)**2 + 4*j2**2))
-    lminus = (j1 + j3) - lplus 
+    # lplus = 1/2*(j1 + j3 + np.sqrt( (j1 - j3)**2 + 4*j2**2))
+    # lminus = 1/2*(j1 + j3 - np.sqrt( (j1 - j3)**2 + 4*j2**2))
+    # perhaps it is faster if the intermediate operations
+    # are stored in temporary variables, but maybe this is 
+    # done automatically, I don't know
+    temp = j1 + j3
+    lplus = 1/2*(temp + np.sqrt( (j1 - j3)**2 + 4*j2**2))
+    lminus = temp - lplus # trick to not recalculate nor store the square root
     # extract the following cornerness criterion
     r = lplus * lminus - k*((lplus + lminus)**2)
     # evaluate the following 2 conditions 
@@ -127,6 +133,50 @@ def CornerDetection(image, sigma, rho, theta, k):
     scale = sigma*np.ones((indices.shape[0], 1))
     corners = np.concatenate((indices, scale), axis=1)
     return corners
+
+def HarrisLaplacian(image, sigma, rho, theta, k, scale, N):
+    # Perhaps the code can be a little cleaner
+    def img_grad2(img,s):
+        Gs = myfilter(s, "gaussian")
+        smooth = cv2.filter2D(img, -1, Gs)
+        gradx,  grady = np.gradient(img)
+        gradxx, gradxy = np.gradient(gradx)
+        gradyx, gradyy = np.gradient(grady)
+        return (gradxx, gradxy, gradyy)
+    # construct the lists of sigma and rho parameters
+    # using the given scales and zip them into a comfy list.
+    scales = [scale**i for i in list(range(N))]
+    sigmas = [scale * sigma for scale in scales]
+    rhos = [scale * rho for scale in scales]
+    params = list(zip(sigmas, rhos))
+    # call the edge detection function for each pair of parameters
+    # if the image is MxM, then the resulting array is
+    # M x (3*N), because the CornerDetection method returns a M x 3 array
+    # and the iterations happens N times, once for every scale.
+    corners_per_scale = [CornerDetection(image, s, r, theta, k) for (s, r) in params]
+    # now we calculate the LoG for the pixels of every scale
+    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+    gradsxx = [img_grad2(image, s)[0] for (s, _) in params]
+    gradsyy = [img_grad2(image, s)[2] for (s, _) in params]
+    grads = list(zip(scales, gradsxx, gradsyy))
+    logs = [(s**2)*np.abs(xx + yy) for (s, xx, yy) in grads]
+    # now we iterate through the points and compare each scale
+    # with its previous and its next. if the log metric is not
+    # maximized, we reject it. 
+    final = []
+    for index, corners in enumerate(corners_per_scale):
+        logc = logs[index]
+        logp = logs[max(index-1,0)]
+        logn = logs[min(index+1,N-1)] 
+        for triplet in corners:
+            x = int(triplet[1])
+            y = int(triplet[0])
+            prev = logp[x][y]
+            curr = logc[x][y]
+            next = logn[x][y]
+            if (curr >= prev) and (curr >= next):
+                final.append(triplet)
+    return np.array(final)
 
 # ================= END FUNCTIONS ================= #
 
@@ -225,10 +275,14 @@ print(f"The quality criterion is C[{index}] = {C}")
 kyoto = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg")
 kyoto = kyoto.astype(np.float64)/kyoto.max()
 gray = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg", cv2.IMREAD_GRAYSCALE)
-corners = CornerDetection(gray, 2, 2.5, 0.05, 0.1)
-print(f"corners shape is {corners.shape}")
+# play around with the parameters
+corners = CornerDetection(gray, 1.2, 2.5, 0.09, 0.1)
+interest_points_visualization(kyoto, corners, None)
+# play around with the parameters
+corners = HarrisLaplacian(gray, 1.2, 2.5, 0.05, 0.1, 1.1, 8)
 interest_points_visualization(kyoto, corners, None)
 
 plt.show()
+
 
 
