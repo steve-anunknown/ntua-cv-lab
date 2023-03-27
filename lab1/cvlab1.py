@@ -11,6 +11,7 @@ def getpsnr(image, noisestd):
 def getstd(image, psnr):
     return (np.max(image)-np.min(image))/(10**(psnr/20))
 
+# this function seems to be unused
 def gaussian2d(x, y, x0, y0, sigmax, sigmay, a):
     return a*np.exp(-((x-x0)**2/(2*sigmax**2)+(y-y0)**2/(2*sigmay**2)))
 
@@ -67,8 +68,12 @@ def EdgeDetect(image, sigma, theta, method):
         # Perform morphological operations using
         # the cross structuring element
         imgloged = cv2.dilate(smooth, cross) + cv2.erode(smooth, cross) - 2*smooth
-
+    # the imgloged variable is visible only if one of the if blocks
+    # get executed. hopefully, this always happens
     L = imgloged
+    # type uin8 is needed for compatibility with the
+    # dilate and erode functions. otherwise, the matrix's
+    # elements would have boolean type.
     X = (L >= 0).astype(np.uint8)
     Y = (cv2.dilate(X, cross)) - (cv2.erode(X, cross))
 
@@ -78,10 +83,14 @@ def EdgeDetect(image, sigma, theta, method):
     return D
 
 def qualitycriterion(real, computed):
+    # use the following names for compatibility
+    # with the project's guide.
     T = real
     D = computed
     DT = (D & T)
-
+    # the matrices are supposed to be boolean
+    # therefore the sum() functions counts the
+    # elements that are true / 1.
     cardT = T.sum()
     cardD = D.sum()
     cardDT = DT.sum()
@@ -107,13 +116,12 @@ def CornerDetection(image, sigma, rho, theta, k):
     # calculate the eigenvalues of J = [j1 j2 j3]
     # lplus = 1/2*(j1 + j3 + np.sqrt( (j1 - j3)**2 + 4*j2**2))
     # lminus = 1/2*(j1 + j3 - np.sqrt( (j1 - j3)**2 + 4*j2**2))
-    # perhaps it is faster if the intermediate operations
-    # are stored in temporary variables, but maybe this is 
-    # done automatically, I don't know
-    temp = j1 + j3
+    # store the sum so as not to recalculate it
+    temp = j1 + j3 
     lplus = 1/2*(temp + np.sqrt( (j1 - j3)**2 + 4*j2**2))
-    lminus = temp - lplus # trick to not recalculate nor store the square root
-    # extract the following cornerness criterion
+    # trick not to recalculate nor store the square root
+    lminus = temp - lplus 
+    # calculate the cornerness criterion
     r = lplus * lminus - k*((lplus + lminus)**2)
     # evaluate the following 2 conditions 
     # condition 1
