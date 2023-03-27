@@ -290,6 +290,8 @@ interest_points_visualization(kyoto, corners, None)
 corners = HarrisLaplacian(gray, 1.2, 2.5, 0.05, 0.1, 1.1, 8)
 interest_points_visualization(kyoto, corners, None)
 
+# =================   END CORNERS DETECTION   ================= #
+
 plt.show()
 
 
