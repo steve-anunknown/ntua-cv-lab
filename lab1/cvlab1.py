@@ -74,7 +74,7 @@ def EdgeDetect(image, sigma, theta, method):
     # type uin8 is needed for compatibility with the
     # dilate and erode functions. otherwise, the matrix's
     # elements would have boolean type.
-    X = (L >= 0).astype(np.uint8)
+    X = (L > 0).astype(np.uint8)
     Y = (cv2.dilate(X, cross)) - (cv2.erode(X, cross))
 
     gradx, grady = np.gradient(smooth)
@@ -101,7 +101,7 @@ def qualitycriterion(real, computed):
     C = (prDT + prTD)/2
     return C
 
-def CornerDetection(image, sigma, rho, theta, k):
+def CornerCriterion(image, sigma, rho, k):
     # define the filters according to the arguments
     Gs = myfilter(sigma, "gaussian")
     Gr = myfilter(rho, "gaussian")
@@ -123,6 +123,12 @@ def CornerDetection(image, sigma, rho, theta, k):
     lminus = temp - lplus 
     # calculate the cornerness criterion
     r = lplus * lminus - k*((lplus + lminus)**2)
+    return r
+
+def CornerDetection(image, sigma, rho, theta, k):
+    # Keep in mind that the image is smoothed
+    # by default in the criterion function.
+    r = CornerCriterion(image, sigma, rho, k)
     # evaluate the following 2 conditions 
     # condition 1
     ns = np.ceil(3*sigma)*2 + 1
@@ -142,15 +148,41 @@ def CornerDetection(image, sigma, rho, theta, k):
     corners = np.concatenate((indices, scale), axis=1)
     return corners
 
+def img_grad2(img,s):
+    Gs = myfilter(s, "gaussian")
+    smooth = cv2.filter2D(img, -1, Gs)
+    gradx,  grady = np.gradient(img)
+    gradxx, gradxy = np.gradient(gradx)
+    gradyx, gradyy = np.gradient(grady)
+    return (gradxx, gradxy, gradyy)
+
+def logmetric(image, params, itemsperscale, scales):
+    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+    N = len(params)
+    gradsxx = [img_grad2(image, s)[0] for (s, _) in params]
+    gradsyy = [img_grad2(image, s)[2] for (s, _) in params]
+    grads = list(zip(scales, gradsxx, gradsyy))
+    logs = [(s**2)*np.abs(xx + yy) for (s, xx, yy) in grads]
+    # now we iterate through the points and compare each scale
+    # with its previous and its next. if the log metric is not
+    # maximized, we reject it. 
+    final = []
+    for index, items in enumerate(itemsperscale):
+        logp = logs[max(index-1,0)]
+        logc = logs[index]
+        logn = logs[min(index+1,N-1)] 
+        for triplet in items:
+            x = int(triplet[1])
+            y = int(triplet[0])
+            prev = logp[x][y]
+            curr = logc[x][y]
+            next = logn[x][y]
+            if (curr >= prev) and (curr >= next):
+                final.append(triplet)
+    return np.array(final)
+
 def HarrisLaplacian(image, sigma, rho, theta, k, scale, N):
     # Perhaps the code can be a little cleaner
-    def img_grad2(img,s):
-        Gs = myfilter(s, "gaussian")
-        smooth = cv2.filter2D(img, -1, Gs)
-        gradx,  grady = np.gradient(img)
-        gradxx, gradxy = np.gradient(gradx)
-        gradyx, gradyy = np.gradient(grady)
-        return (gradxx, gradxy, gradyy)
     # construct the lists of sigma and rho parameters
     # using the given scales and zip them into a comfy list.
     scales = [scale**i for i in list(range(N))]
@@ -163,28 +195,61 @@ def HarrisLaplacian(image, sigma, rho, theta, k, scale, N):
     # and the iterations happens N times, once for every scale.
     corners_per_scale = [CornerDetection(image, s, r, theta, k) for (s, r) in params]
     # now we calculate the LoG for the pixels of every scale
+    return logmetric(image, params, corners_per_scale, scales)
+
+def Hessian(image, sigma):
+    Gs = myfilter(sigma, "gaussian")
+    smooth = cv2.filter2D(image, -1, Gs)
+    gradx, grady = np.gradient(smooth)
+    gradxx, gradxy = np.gradient(gradx)
+    gradxy, gradyy = np.gradient(grady)
+    return np.array([[gradxx, gradxy],
+        [gradxy, gradyy]])
+def BlobCriterion(image, sigma):
+    H = Hessian(image, sigma)
+    return H[0,0] * H[1,1] - H[0,1] * H[1,0]
+
+def BlobDetection(image, sigma, theta):
+    # calculate the blobness criterion
+    # keep in mind that the image is smoothed
+    # by default in the BlobCriterion function
+    r = BlobCriterion(image, sigma) 
+    # evaluate the following 2 conditions 
+    # condition 1
+    ns = np.ceil(3*sigma)*2 + 1
+    bsq = disk_strel(ns)
+    cond1 = ( r == cv2.dilate(r, bsq) )
+    # condition 2
+    maxr = np.max(r)
+    cond2 = ( r > theta * maxr )
+    x, y = np.where(cond1 & cond2)
+    # for compatibility with the utility function
+    # provided by the lab staff, the y coordinate
+    # has to come before the x coordinate
+    indices = np.column_stack((y,x))
+    scale = sigma*np.ones((indices.shape[0], 1))
+    blobs = np.concatenate((indices, scale), axis=1)
+    return blobs
+
+# this is terribly inefficient. the gradients are computed
+# many more times than needed.
+
+def HessianLaplacian(image, sigma, rho, scale, N):
+    # construct the lists of sigma and rho parameters
+    # using the given scales and zip them into a comfy list.
+    scales = [scale**i for i in list(range(N))]
+    sigmas = [scale * sigma for scale in scales]
+    rhos = [scale * rho for scale in scales]
+    params = list(zip(sigmas, rhos))
+    # call the blob detection function for each pair of parameters
+    # if the image is MxM, then the resulting array is
+    # M x (3*N), because the BlobDetection method returns a M x 3 array
+    # and the iterations happens N times, once for every scale.
+    blobs_per_scale = [BlobDetection(image, s, r) for (s, r) in params]
+    # now we calculate the LoG for the pixels of every scale
     # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
-    gradsxx = [img_grad2(image, s)[0] for (s, _) in params]
-    gradsyy = [img_grad2(image, s)[2] for (s, _) in params]
-    grads = list(zip(scales, gradsxx, gradsyy))
-    logs = [(s**2)*np.abs(xx + yy) for (s, xx, yy) in grads]
-    # now we iterate through the points and compare each scale
-    # with its previous and its next. if the log metric is not
-    # maximized, we reject it. 
-    final = []
-    for index, corners in enumerate(corners_per_scale):
-        logc = logs[index]
-        logp = logs[max(index-1,0)]
-        logn = logs[min(index+1,N-1)] 
-        for triplet in corners:
-            x = int(triplet[1])
-            y = int(triplet[0])
-            prev = logp[x][y]
-            curr = logc[x][y]
-            next = logn[x][y]
-            if (curr >= prev) and (curr >= next):
-                final.append(triplet)
-    return np.array(final)
+    return logmetric(image, params, blobs_per_scale, scales)
+
 
 # ================= END FUNCTIONS ================= #
 
@@ -291,6 +356,19 @@ corners = HarrisLaplacian(gray, 1.2, 2.5, 0.05, 0.1, 1.1, 8)
 interest_points_visualization(kyoto, corners, None)
 
 # =================   END CORNERS DETECTION   ================= #
+# =================    BEG BLOB DETECTION     ================= #
+
+up = cv2.imread("cv23_lab1_part12_material/up.png")
+up = up.astype(np.float64)/up.max()
+gray = cv2.imread("cv23_lab1_part12_material/up.png", cv2.IMREAD_GRAYSCALE)
+# play around with the parameters
+blobs = BlobDetection(gray, 2.5, 0.25)
+interest_points_visualization(up, blobs, None)
+# play around with the parameters
+blobs = HessianLaplacian(gray, 1.5, 0.05, 1.1, 8)
+interest_points_visualization(up, blobs, None)
+
+# =================    END BLOB DETECTION     ================= #
 
 plt.show()
 
