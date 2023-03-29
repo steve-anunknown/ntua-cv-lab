@@ -247,72 +247,90 @@ def HessianLaplacian(image, sigma, rho, scale, N):
 def IntegralImage(i):
     return np.cumsum(np.cumsum(i, axis=0), axis=1)
 
-def BoxSOD(image, sigma):
-    # box second order derivative
-    def roi(im, height, width):
-        # roi = Rectangle Of Interest
-        # get the center of the box
-        cx = (width + 1)/2 - 1
-        cy = (height + 1)/2 - 1
-        # pad it. this is necessary because the (x,y) pixel of the output
-        # refers to the center of the box which we calculate the mean of.
-        # therefore, in order to get the same dimensionality as the original image
-        # we have to pad it and then unpad it. otherwise, the edges will be missing.
-
-        # pad the image up and down by height
-        # pad the image left and right by width
-        padded = np.pad(im, ((height, height),(width, width)), mode='edge')
-        padded = np.pad(padded, ((height, height),(width, width)), mode='constant')
-        a = np.roll(padded, shift=(cy+1, cx+1), axis=(0, 1))
-        b = np.roll(padded, shift=(cy+1, -cx), axis=(0, 1))
-        c = np.roll(padded, shift=(-cy, -cx), axis=(0, 1))
-        d = np.roll(padded, shift=(-cy, cx+1), axis=(0, 1))
-        result = a + c - b - d
-        # unpad it
-        result = result[cy+2:-cy-1, cx+2:-cx-1]
-
-    # get integral image
+def BoxDerivative(image, sigma):
     ii = IntegralImage(image)
+    n = 2*np.ceil(3*sigma) + 1
+    x, y = image.shape
 
-    # define the boxes
-    n = 2*np.ceil(3*sigma)+1
-    heightxx = 4*np.floor(n/6)+1
-    widthxx = 2*np.floor(n/6)+1
-    cxxx = (widthxx+1)/2 - 1
-    cxxy = (heightxx+1)/2 - 1
-    # pad the width to avoid conflicts
-    lxx = np.pad(lxx, ((0, 0), (widthxx, widthxx)), mode='constant')
-    lxx = roi(ii, heightxx, widthxx)
-    lxx = np.roll(lxx, shift=(0, -widthxx), axis=(0,1)) - 2*lxx + np.roll(lxx, shift=(0, widthxx), axis=(0,1))
-    # unpad
-    lxx = lxx[cxxy+1:-cxxy, widthxx+cxxx+1:-widthxx-cxxx]
+    lxx = lyy = lxy = np.zeros((x,y))
+    height, width = 4*np.floor(n/6) + 1, 2*np.floor(n/6) + 1
+    midh, midw = (height - 1)/2, (width - 1)/2
+    # pad with zeroes so as to handle the edge cases
+    # height is greater than width, therefore pad with that
+    ii = np.pad(ii, ((height, height), (height, height)), mode='constant')
+    # (ix, iy) is the centre of the box. iterate through every
+    # pixel of the integral image
+    for ix in range(x):
+        for iy in range(y):
+            topleft = ii[ix - midh, iy - midw - width]
+            topright = ii[ix - midh, iy - midw]
+            botright = ii[ix + midh, iy - midw]
+            botleft = ii[ix + midh, iy - midw - width]
+            lxx[ix,iy] = topleft - topright + botright - botleft
+            
+            topleft = topright
+            topright = ii[ix - midh, iy + midw]
+            botright = ii[ix + midh, iy + midw]
+            botleft = botright
+            lxx[ix,iy] -= 2*(topleft - topright + botright - botleft)
+            
+            topleft = topright
+            topright = ii[ix - midh, iy + midw + width]
+            botright = ii[ix + midh, iy + midw + width]
+            botleft = botright
+            lxx[ix,iy] += topleft - topright + botright - botleft
 
-    heightxy = 2*np.floor(n/6)+1
-    widthxy = 2*np.floor(n/6)+1
-    cxyx = (widthxy+1)/2 - 1
-    cxyy = (heightxy+1)/2 - 1
-    # pad the width to avoid conflicts
-    lxy = np.pad(lxy, ((cxyy+1, cxyy+1),(cxyx+1,cxyx+1)), mode='constant')
-    lxy = roi(ii, heightxy, widthxy)
-    lxy = np.roll(lxy, shift=(-cxyy-1, -cxyx-1), axis=(0,1)) + np.roll(lxy, shift=(cxyy+1, cxyx+1), axis=(0,1)) - np.roll(lxy, shift=(cxyy+1, -cxyx-1), axis=(0,1)) - np.roll(lxy, shift=(-cxyy-1, cxyx+1), axis=(0,1))
-    # unpad
-    lxy = lxy[2*cxyy+2:-2*cxyy-1, 2*cxyx+2:-2*cxyx-1]
+            height, width = width, height
+            midh, midw = (height - 1)/2, (width - 1)/2
 
-    heightyy = 2*np.floor(n/6)+1
-    widthyy = 4*np.floor(n/6)+1
-    cyyx = (widthyy+1)/2 - 1
-    cyyy = (heightyy+1)/2 - 1
-    # pad the width to avoid conflicts
-    lyy = np.pad(lyy, ((heightyy, heightyy), (0, 0)), mode='constant')
-    lyy = roi(ii, heightyy, widthyy)
-    lyy = np.roll(lyy, shift=(0, -widthyy), axis=(0,1)) - 2*lyy + np.roll(lyy, shift=(0, widthyy), axis=(0,1))
-    # unpad
-    lyy = lyy[heightyy+cyyy+1:-heightyy-cyy, cyyx+1:-cyyx]
+            topleft = ii[ix - midh - height, iy - midw]
+            topright = ii[ix - midh - height, iy + midw]
+            botright = ii[ix - midh, iy + midw]
+            botleft = ii[ix - midh, iy - midw]
+            lyy[ix,iy] = topleft - topright + botright - botleft
+            
+            topleft = botleft
+            topright = botright
+            botright = ii[ix + midh, iy + midw]
+            botleft = ii[ix + midh, iy - midw]
+            lyy[ix,iy] -= 2*(topleft - topright + botright - botleft)
 
+            topleft = botleft
+            topright = botright
+            botright = ii[ix + midh + height, iy + midw]
+            botleft = ii[ix + midh + height, iy - midw]
+            lyy[ix,iy] += topleft - topright + botright - botleft
+
+            width = height
+            midh, midw = (height - 1)/2, (width - 1)/2
+
+            topleft = ii[ix - 1 - height, iy - 1 - width]
+            topright = ii[ix - 1 - height, iy - 1]
+            botright = ii[ix - 1, iy - 1]
+            botleft = ii[ix - 1, iy - 1 - width]
+            lxy[ix,iy] = topleft - topright + botright - botleft
+
+            topleft = ii[ix - 1 - height, iy + 1]
+            topright = ii[ix - 1 - height, iy + 1 + width]
+            botright = ii[ix - 1, iy + 1 + width]
+            botleft = ii[ix - 1, iy + 1]
+            lxy[ix,iy] -= topleft - topright + botright - botleft
+
+            topleft = ii[ix + 1, iy + 1]
+            topright = ii[ix + 1, iy + 1 + width]
+            botright = ii[ix + 1 + height, iy + 1 + width]
+            botleft = ii[ix + 1 + height, iy + 1]
+            lxy[ix,iy] += topleft - topright + botright - botleft
+
+            topleft = ii[ix + 1, iy - 1 - width]
+            topright = ii[ix + 1, iy - 1]
+            botright = ii[ix + 1 + height, iy - 1]
+            botleft = ii[ix + 1 + height, iy - 1 - width]
+            lxy[ix,iy] -= topleft - topright + botright - botleft
     return (lxx, lxy, lyy)
 
 def BoxCriterion(image, sigma):
-    lxx, lxy, lyy = BoxSOD(image, sigma)
+    lxx, lxy, lyy = BoxDerivative(image, sigma)
     r = lxx*lyy - (0.9*lxy)**2
     return r
 
