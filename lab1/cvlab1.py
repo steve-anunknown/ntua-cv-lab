@@ -154,6 +154,9 @@ def CornerDetection(image, sigma, rho, theta, k):
 
 def LogMetric(image, params, itemsperscale, scales):
     # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+    # returns the coordinates of the points that maximize
+    # the log metric in a neighborhood of 3 scales
+    # (prev scale), (curr scale), (next scale)
     def img_grad2(img,s):
         Gs = myfilter(s, "gaussian")
         smooth = cv2.filter2D(img, -1, Gs)
