@@ -11,10 +11,6 @@ def getpsnr(image, noisestd):
 def getstd(image, psnr):
     return (np.max(image)-np.min(image))/(10**(psnr/20))
 
-# this function seems to be unused
-def gaussian2d(x, y, x0, y0, sigmax, sigmay, a):
-    return a*np.exp(-((x-x0)**2/(2*sigmax**2)+(y-y0)**2/(2*sigmay**2)))
-
 def my2dconv(image, kernel):
     ix, iy = image.shape
     nx, ny = kernel.shape
@@ -82,7 +78,7 @@ def EdgeDetect(image, sigma, theta, method):
     D = ((Y == 1) & (grad > (theta * np.max(grad))))
     return D
 
-def qualitycriterion(real, computed):
+def QualityMetric(real, computed):
     # use the following names for compatibility
     # with the project's guide.
     T = real
@@ -100,6 +96,28 @@ def qualitycriterion(real, computed):
 
     C = (prDT + prTD)/2
     return C
+
+def InterestPointCoord(r, sigma, theta):
+    # r is a previously evaluated criterion
+    # sigma is used for the size of the structure
+    # theta is a threshold
+    
+    # evaluate the following 2 conditions 
+    # condition 1
+    ns = 2*np.ceil(3*sigma) + 1
+    bsq = disk_strel(ns)
+    cond1 = ( r == cv2.dilate(r, bsq) )
+    # condition 2
+    maxr = np.max(r)
+    cond2 = ( r > theta * maxr )
+    # choose the pixels that satisfy both of them
+    # return their coordinates and their scale
+    x, y = np.where(cond1 & cond2)
+    # for compatibility with the utility function
+    # provided by the lab staff, the y coordinate
+    # has to come before the x coordinate
+    indices = np.column_stack((y,x))
+    return indices
 
 def CornerCriterion(image, sigma, rho, k):
     # define the filters according to the arguments
@@ -125,24 +143,6 @@ def CornerCriterion(image, sigma, rho, k):
     r = lplus * lminus - k*((lplus + lminus)**2)
     return r
 
-def InterestPointCoord(r, sigma, theta):
-    # evaluate the following 2 conditions 
-    # condition 1
-    ns = 2*np.ceil(3*sigma) + 1
-    bsq = disk_strel(ns)
-    cond1 = ( r == cv2.dilate(r, bsq) )
-    # condition 2
-    maxr = np.max(r)
-    cond2 = ( r > theta * maxr )
-    # choose the pixels that satisfy both of them
-    # return their coordinates and their scale
-    x, y = np.where(cond1 & cond2)
-    # for compatibility with the utility function
-    # provided by the lab staff, the y coordinate
-    # has to come before the x coordinate
-    indices = np.column_stack((y,x))
-    return indices
-
 def CornerDetection(image, sigma, rho, theta, k):
     # Keep in mind that the image is smoothed
     # by default in the criterion function.
@@ -152,16 +152,15 @@ def CornerDetection(image, sigma, rho, theta, k):
     corners = np.concatenate((indices, scale), axis=1)
     return corners
 
-def img_grad2(img,s):
-    Gs = myfilter(s, "gaussian")
-    smooth = cv2.filter2D(img, -1, Gs)
-    gradx,  grady = np.gradient(img)
-    gradxx, gradxy = np.gradient(gradx)
-    gradyx, gradyy = np.gradient(grady)
-    return (gradxx, gradxy, gradyy)
-
-def logmetric(image, params, itemsperscale, scales):
+def LogMetric(image, params, itemsperscale, scales):
     # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+    def img_grad2(img,s):
+        Gs = myfilter(s, "gaussian")
+        smooth = cv2.filter2D(img, -1, Gs)
+        gradx,  grady = np.gradient(smooth)
+        gradxx, gradxy = np.gradient(gradx)
+        _ , gradyy = np.gradient(grady)
+        return (gradxx, gradxy, gradyy)
     N = len(params)
     gradsxx = [img_grad2(image, s)[0] for (s, _) in params]
     gradsyy = [img_grad2(image, s)[2] for (s, _) in params]
@@ -186,9 +185,8 @@ def logmetric(image, params, itemsperscale, scales):
     return np.array(final)
 
 def HarrisLaplacian(image, sigma, rho, theta, k, scale, N):
-    # Perhaps the code can be a little cleaner
-    # construct the lists of sigma and rho parameters
-    # using the given scales and zip them into a comfy list.
+    # Multiscale Corner Detection
+
     scales = [scale**i for i in list(range(N))]
     sigmas = [scale * sigma for scale in scales]
     rhos = [scale * rho for scale in scales]
@@ -199,9 +197,11 @@ def HarrisLaplacian(image, sigma, rho, theta, k, scale, N):
     # and the iterations happens N times, once for every scale.
     corners_per_scale = [CornerDetection(image, s, r, theta, k) for (s, r) in params]
     # now we calculate the LoG for the pixels of every scale
-    return logmetric(image, params, corners_per_scale, scales)
+    return LogMetric(image, params, corners_per_scale, scales)
 
 def Hessian(image, sigma):
+    # this is the same as the img_grad2 function
+    # but it returns an array, not a triplet
     Gs = myfilter(sigma, "gaussian")
     smooth = cv2.filter2D(image, -1, Gs)
     gradx, grady = np.gradient(smooth)
@@ -228,8 +228,7 @@ def BlobDetection(image, sigma, theta):
 # many more times than needed.
 
 def HessianLaplacian(image, sigma, rho, scale, N):
-    # construct the lists of sigma and rho parameters
-    # using the given scales and zip them into a comfy list.
+    # Multiscale Blob Detection
     scales = [scale**i for i in list(range(N))]
     sigmas = [scale * sigma for scale in scales]
     rhos = [scale * rho for scale in scales]
@@ -240,8 +239,7 @@ def HessianLaplacian(image, sigma, rho, scale, N):
     # and the iterations happens N times, once for every scale.
     blobs_per_scale = [BlobDetection(image, s, r) for (s, r) in params]
     # now we calculate the LoG for the pixels of every scale
-    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
-    return logmetric(image, params, blobs_per_scale, scales)
+    return LogMetric(image, params, blobs_per_scale, scales)
 
 def IntegralImage(i):
     return np.cumsum(np.cumsum(i, axis=0), axis=1)
@@ -251,8 +249,8 @@ def BoxSOD(image, sigma):
     def roi(im, height, width):
         # roi = Rectangle Of Interest
         # get the center of the box
-        centerx = (width + 1)/2 - 1;
-        centery = (height + 1)/2 - 1;
+        cx = (width + 1)/2 - 1
+        cy = (height + 1)/2 - 1
         # pad it. this is necessary because the (x,y) pixel of the output
         # refers to the center of the box which we calculate the mean of.
         # therefore, in order to get the same dimensionality as the original image
@@ -260,15 +258,15 @@ def BoxSOD(image, sigma):
 
         # pad the image up and down by height
         # pad the image left and right by width
-        padded = np.pad(im, ((height, height),(width, width), mode='edge')
-        padded = np.pad(padded, ((height, height),(width, width), mode='constant')
-        a = np.roll(padded, shift=(y+1, x+1), axis=(0, 1))
-        b = np.roll(padded, shift=(y+1, -x), axis=(0, 1))
-        c = np.roll(padded, shift=(-y, -x), axis=(0, 1))
-        d = np.roll(padded, shift=(-y, x+1), axis=(0, 1))
+        padded = np.pad(im, ((height, height),(width, width)), mode='edge')
+        padded = np.pad(padded, ((height, height),(width, width)), mode='constant')
+        a = np.roll(padded, shift=(cy+1, cx+1), axis=(0, 1))
+        b = np.roll(padded, shift=(cy+1, -cx), axis=(0, 1))
+        c = np.roll(padded, shift=(-cy, -cx), axis=(0, 1))
+        d = np.roll(padded, shift=(-cy, cx+1), axis=(0, 1))
         result = a + c - b - d
         # unpad it
-        result = result[y+2:-y-1, x+2:-x-1]
+        result = result[cy+2:-cy-1, cx+2:-cx-1]
 
     # get integral image
     ii = IntegralImage(image)
@@ -282,7 +280,7 @@ def BoxSOD(image, sigma):
     # pad the width to avoid conflicts
     lxx = np.pad(lxx, ((0, 0), (widthxx, widthxx)), mode='constant')
     lxx = roi(ii, heightxx, widthxx)
-    lxx = np.roll(lxx, shift=(0, -widthxx), axis=(0,1)) - 2*lxx + np.roll(lxx, shift(0, widthxx), axis(0,1))
+    lxx = np.roll(lxx, shift=(0, -widthxx), axis=(0,1)) - 2*lxx + np.roll(lxx, shift=(0, widthxx), axis=(0,1))
     # unpad
     lxx = lxx[cxxy+1:-cxxy, widthxx+cxxx+1:-widthxx-cxxx]
 
@@ -291,9 +289,9 @@ def BoxSOD(image, sigma):
     cxyx = (widthxy+1)/2 - 1
     cxyy = (heightxy+1)/2 - 1
     # pad the width to avoid conflicts
-    lxy = np.pad(lxy, ((cxyy+1, cxyy+1),(cxx+1,cxx+1)), mode='constant')
+    lxy = np.pad(lxy, ((cxyy+1, cxyy+1),(cxyx+1,cxyx+1)), mode='constant')
     lxy = roi(ii, heightxy, widthxy)
-    lxy = np.roll(lxy, shift=(-cxyy-1, -cxyx-1), axis=(0,1)) + np.roll(lxy, shift(cxyy+1, cxyx+1), axis(0,1)) - np.roll(lxy, shift=(cxyy+1, -cxyx-1), axis=(0,1)) - np.roll(lxy, shift=(-cxyy-1, cxyx+1), axis(0,1)
+    lxy = np.roll(lxy, shift=(-cxyy-1, -cxyx-1), axis=(0,1)) + np.roll(lxy, shift=(cxyy+1, cxyx+1), axis=(0,1)) - np.roll(lxy, shift=(cxyy+1, -cxyx-1), axis=(0,1)) - np.roll(lxy, shift=(-cxyy-1, cxyx+1), axis=(0,1))
     # unpad
     lxy = lxy[2*cxyy+2:-2*cxyy-1, 2*cxyx+2:-2*cxyx-1]
 
@@ -304,14 +302,13 @@ def BoxSOD(image, sigma):
     # pad the width to avoid conflicts
     lyy = np.pad(lyy, ((heightyy, heightyy), (0, 0)), mode='constant')
     lyy = roi(ii, heightyy, widthyy)
-    lyy = np.roll(lyy, shift=(0, -widthyy), axis=(0,1)) - 2*lyy + np.roll(lyy, shift(0, widthyy), axis(0,1))
+    lyy = np.roll(lyy, shift=(0, -widthyy), axis=(0,1)) - 2*lyy + np.roll(lyy, shift=(0, widthyy), axis=(0,1))
     # unpad
     lyy = lyy[heightyy+cyyy+1:-heightyy-cyy, cyyx+1:-cyyx]
 
     return (lxx, lxy, lyy)
 
 def BoxCriterion(image, sigma):
-    n = 2*np.ceil(3*sigma)+1
     lxx, lxy, lyy = BoxSOD(image, sigma)
     r = lxx*lyy - (0.9*lxy)**2
     return r
@@ -371,9 +368,8 @@ for index, img in enumerate(noised_images):
     plt.show(block=False)
     plt.pause(0.01)
 
-    C = qualitycriterion(T, D)
+    C = QualityMetric(T, D)
     print(f"The quality criterion is C[{index}] = {C}")
-
 
 # ================= BEG REAL IMAGE PROCESSING ================= #
 
@@ -411,7 +407,7 @@ axs[1, 1].set_title("Non Linear edge detection")
 plt.show(block=False)
 plt.pause(0.01)
 
-C = qualitycriterion(T, D)
+C = QualityMetric(T, D)
 print(f"The quality criterion is C[{index}] = {C}")
 
 # ================= END REAL IMAGE PROCESSING ================= #
@@ -451,7 +447,6 @@ blobs = HessianLaplacian(gray, 1.5, 0.05, 1.1, 8)
 interest_points_visualization(cells, blobs, None)
 
 # =================    END BLOB DETECTION     ================= #
-
 # =================       BEG SPEED UP        ================= #
 
 # =================       END SPEED UP        ================= #
