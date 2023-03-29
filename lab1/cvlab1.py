@@ -125,13 +125,10 @@ def CornerCriterion(image, sigma, rho, k):
     r = lplus * lminus - k*((lplus + lminus)**2)
     return r
 
-def CornerDetection(image, sigma, rho, theta, k):
-    # Keep in mind that the image is smoothed
-    # by default in the criterion function.
-    r = CornerCriterion(image, sigma, rho, k)
+def InterestPointCoord(r, sigma, theta):
     # evaluate the following 2 conditions 
     # condition 1
-    ns = np.ceil(3*sigma)*2 + 1
+    ns = 2*np.ceil(3*sigma) + 1
     bsq = disk_strel(ns)
     cond1 = ( r == cv2.dilate(r, bsq) )
     # condition 2
@@ -144,6 +141,13 @@ def CornerDetection(image, sigma, rho, theta, k):
     # provided by the lab staff, the y coordinate
     # has to come before the x coordinate
     indices = np.column_stack((y,x))
+    return indices
+
+def CornerDetection(image, sigma, rho, theta, k):
+    # Keep in mind that the image is smoothed
+    # by default in the criterion function.
+    r = CornerCriterion(image, sigma, rho, k)
+    indices = InterestPointCoord(r, sigma, theta)
     scale = sigma*np.ones((indices.shape[0], 1))
     corners = np.concatenate((indices, scale), axis=1)
     return corners
@@ -205,6 +209,7 @@ def Hessian(image, sigma):
     gradxy, gradyy = np.gradient(grady)
     return np.array([[gradxx, gradxy],
         [gradxy, gradyy]])
+
 def BlobCriterion(image, sigma):
     H = Hessian(image, sigma)
     return H[0,0] * H[1,1] - H[0,1] * H[1,0]
@@ -214,19 +219,7 @@ def BlobDetection(image, sigma, theta):
     # keep in mind that the image is smoothed
     # by default in the BlobCriterion function
     r = BlobCriterion(image, sigma) 
-    # evaluate the following 2 conditions 
-    # condition 1
-    ns = np.ceil(3*sigma)*2 + 1
-    bsq = disk_strel(ns)
-    cond1 = ( r == cv2.dilate(r, bsq) )
-    # condition 2
-    maxr = np.max(r)
-    cond2 = ( r > theta * maxr )
-    x, y = np.where(cond1 & cond2)
-    # for compatibility with the utility function
-    # provided by the lab staff, the y coordinate
-    # has to come before the x coordinate
-    indices = np.column_stack((y,x))
+    indices = InterestPointCoord(r, sigma, theta)
     scale = sigma*np.ones((indices.shape[0], 1))
     blobs = np.concatenate((indices, scale), axis=1)
     return blobs
@@ -250,6 +243,85 @@ def HessianLaplacian(image, sigma, rho, scale, N):
     # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
     return logmetric(image, params, blobs_per_scale, scales)
 
+def IntegralImage(i):
+    return np.cumsum(np.cumsum(i, axis=0), axis=1)
+
+def BoxSOD(image, sigma):
+    # box second order derivative
+    def roi(im, height, width):
+        # roi = Rectangle Of Interest
+        # get the center of the box
+        centerx = (width + 1)/2 - 1;
+        centery = (height + 1)/2 - 1;
+        # pad it. this is necessary because the (x,y) pixel of the output
+        # refers to the center of the box which we calculate the mean of.
+        # therefore, in order to get the same dimensionality as the original image
+        # we have to pad it and then unpad it. otherwise, the edges will be missing.
+
+        # pad the image up and down by height
+        # pad the image left and right by width
+        padded = np.pad(im, ((height, height),(width, width), mode='edge')
+        padded = np.pad(padded, ((height, height),(width, width), mode='constant')
+        a = np.roll(padded, shift=(y+1, x+1), axis=(0, 1))
+        b = np.roll(padded, shift=(y+1, -x), axis=(0, 1))
+        c = np.roll(padded, shift=(-y, -x), axis=(0, 1))
+        d = np.roll(padded, shift=(-y, x+1), axis=(0, 1))
+        result = a + c - b - d
+        # unpad it
+        result = result[y+2:-y-1, x+2:-x-1]
+
+    # get integral image
+    ii = IntegralImage(image)
+
+    # define the boxes
+    n = 2*np.ceil(3*sigma)+1
+    heightxx = 4*np.floor(n/6)+1
+    widthxx = 2*np.floor(n/6)+1
+    cxxx = (widthxx+1)/2 - 1
+    cxxy = (heightxx+1)/2 - 1
+    # pad the width to avoid conflicts
+    lxx = np.pad(lxx, ((0, 0), (widthxx, widthxx)), mode='constant')
+    lxx = roi(ii, heightxx, widthxx)
+    lxx = np.roll(lxx, shift=(0, -widthxx), axis=(0,1)) - 2*lxx + np.roll(lxx, shift(0, widthxx), axis(0,1))
+    # unpad
+    lxx = lxx[cxxy+1:-cxxy, widthxx+cxxx+1:-widthxx-cxxx]
+
+    heightxy = 2*np.floor(n/6)+1
+    widthxy = 2*np.floor(n/6)+1
+    cxyx = (widthxy+1)/2 - 1
+    cxyy = (heightxy+1)/2 - 1
+    # pad the width to avoid conflicts
+    lxy = np.pad(lxy, ((cxyy+1, cxyy+1),(cxx+1,cxx+1)), mode='constant')
+    lxy = roi(ii, heightxy, widthxy)
+    lxy = np.roll(lxy, shift=(-cxyy-1, -cxyx-1), axis=(0,1)) + np.roll(lxy, shift(cxyy+1, cxyx+1), axis(0,1)) - np.roll(lxy, shift=(cxyy+1, -cxyx-1), axis=(0,1)) - np.roll(lxy, shift=(-cxyy-1, cxyx+1), axis(0,1)
+    # unpad
+    lxy = lxy[2*cxyy+2:-2*cxyy-1, 2*cxyx+2:-2*cxyx-1]
+
+    heightyy = 2*np.floor(n/6)+1
+    widthyy = 4*np.floor(n/6)+1
+    cyyx = (widthyy+1)/2 - 1
+    cyyy = (heightyy+1)/2 - 1
+    # pad the width to avoid conflicts
+    lyy = np.pad(lyy, ((heightyy, heightyy), (0, 0)), mode='constant')
+    lyy = roi(ii, heightyy, widthyy)
+    lyy = np.roll(lyy, shift=(0, -widthyy), axis=(0,1)) - 2*lyy + np.roll(lyy, shift(0, widthyy), axis(0,1))
+    # unpad
+    lyy = lyy[heightyy+cyyy+1:-heightyy-cyy, cyyx+1:-cyyx]
+
+    return (lxx, lxy, lyy)
+
+def BoxCriterion(image, sigma):
+    n = 2*np.ceil(3*sigma)+1
+    lxx, lxy, lyy = BoxSOD(image, sigma)
+    r = lxx*lyy - (0.9*lxy)**2
+    return r
+
+def BoxFilters(image, sigma, theta):
+    r = BoxCriterion(image, sigma)
+    indices = InterestPointCoord(r, sigma, theta)
+    scale = sigma*np.ones((indices.shape[0], 1))
+    blobs = np.concatenate((indices, scale), axis=1)
+    return blobs 
 
 # ================= END FUNCTIONS ================= #
 
@@ -368,7 +440,21 @@ interest_points_visualization(up, blobs, None)
 blobs = HessianLaplacian(gray, 1.5, 0.05, 1.1, 8)
 interest_points_visualization(up, blobs, None)
 
+cells = cv2.imread("cv23_lab1_part12_material/cells.jpg")
+cells = cells.astype(np.float64)/cells.max()
+gray = cv2.imread("cv23_lab1_part12_material/cells.jpg", cv2.IMREAD_GRAYSCALE)
+# play around with the parameters
+blobs = BlobDetection(gray, 2.5, 0.25)
+interest_points_visualization(cells, blobs, None)
+# play around with the parameters
+blobs = HessianLaplacian(gray, 1.5, 0.05, 1.1, 8)
+interest_points_visualization(cells, blobs, None)
+
 # =================    END BLOB DETECTION     ================= #
+
+# =================       BEG SPEED UP        ================= #
+
+# =================       END SPEED UP        ================= #
 
 plt.show()
 

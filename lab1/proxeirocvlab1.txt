@@ -134,3 +134,16 @@ for index, nsd_img in enumerate(noised_images):
             if (curr >= prev) and (curr >= next):
                 final.append(triplet)
     return np.array(final)
+
+
+
+def IntegralImageManual(i):
+    x, y = i.shape
+    r = np.zeros(i.shape)
+    # r[ix][0] = 0 for all ix
+    # r[0][iy] = 0 for all iy
+    for ix in list(range(1,x)):
+        for iy in list(range(1,y)):
+            r[ix][iy] = i[ix][iy] - r[ix-1][iy-1] + r[ix][iy-1] + r[ix-1][iy]
+    return r
+
