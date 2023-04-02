@@ -228,3 +228,106 @@ print(f"The quality criterion is C[{index}] = {C}")
 plt.show()
 
 
+
+def BoxCriterion(ii, sigma):
+    lxx, lxy, lyy = BoxDerivative(ii, sigma)
+    r = lxx*lyy - (0.9*lxy)**2
+    return r
+
+def BoxFilters(ii, sigma, theta):
+    r = BoxCriterion(ii, sigma)
+    indices = InterestPointCoord(r, sigma, theta)
+    scale = sigma*np.ones((indices.shape[0], 1))
+    blobs = np.concatenate((indices, scale), axis=1)
+    return blobs
+
+def BoxFiltersLaplacian(image, sigma, theta, scale, N):
+    # Multiscale Blob Detection
+    scales = [scale**i for i in list(range(N))]
+    sigmas = [scale*sigma for scale in scales]
+    ii = IntegralImage(image)
+    blobs_per_scale = [BoxFilters(ii, s, theta) for s in sigmas]
+    return LogMetric(image, sigmas, blobs_per_scale, scales)
+
+
+
+def LogMetric2(image, sigmas, itemsperscale, scales):
+    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+    # returns the coordinates of the points that maximize
+    # the log metric in a neighborhood of 3 scales
+    # (prev scale), (curr scale), (next scale)
+    def img_grad2(img,s):
+        Gs = myfilter(s, "gaussian")
+        smooth = cv2.filter2D(img, -1, Gs)
+        gradx,  grady = np.gradient(smooth)
+        gradxx, gradxy = np.gradient(gradx)
+        _ , gradyy = np.gradient(grady)
+        return (gradxx, gradxy, gradyy)
+    N = len(sigmas)
+    gradsxx = [img_grad2(image, s)[0] for s in sigmas]
+    gradsyy = [img_grad2(image, s)[2] for s in sigmas]
+    grads = list(zip(scales, gradsxx, gradsyy))
+    logs = [(s**2)*np.abs(xx + yy) for (s, xx, yy) in grads]
+    # now we iterate through the points and compare each scale
+    # with its previous and its next. if the log metric is not
+    # maximized, we reject it. 
+    final = []
+    for index, items in enumerate(itemsperscale):
+        logp = logs[max(index-1,0)]
+        logc = logs[index]
+        logn = logs[min(index+1,N-1)] 
+        for triplet in items:
+            x = int(triplet[1])
+            y = int(triplet[0])
+            prev = logp[x,y]
+            curr = logc[x,y]
+            next = logn[x,y]
+            if (curr >= prev) and (curr >= next):
+                final.append(triplet)
+    return np.array(final)
+
+
+
+def CornerCriterion(image, sigma, rho, k):
+    # define the filters according to the arguments
+    Gs = myfilter(sigma, "gaussian")
+    Gr = myfilter(rho, "gaussian")
+    # smoothen the image
+    smooth = cv2.filter2D(image, -1, Gs)
+    # calculate the gradient on both directions 
+    gradx, grady = np.gradient(smooth)
+    # calculate whatevere these elements are 
+    j1 = cv2.filter2D(gradx * gradx, -1, Gr)
+    j2 = cv2.filter2D(gradx * grady, -1, Gr)
+    j3 = cv2.filter2D(grady * grady, -1, Gr)
+    temp = j1 + j3 
+    lplus = 1/2*(temp + np.sqrt( (j1 - j3)**2 + 4*j2**2))
+    # trick not to recalculate nor store the square root
+    lminus = temp - lplus 
+    # calculate the cornerness criterion
+    r = lplus * lminus - k*((lplus + lminus)**2)
+    return r
+
+
+def BlobDetection(image, sigma, theta):
+    # calculate the blobness criterion
+    # keep in mind that the image is smoothed
+    # by default in the BlobCriterion function
+    def BlobCriterion(image, sigma):
+        def Hessian(image, sigma):
+            # this is the same as the img_grad2 function
+            # but it returns an array, not a triplet
+            Gs = myfilter(sigma, "gaussian")
+            smooth = cv2.filter2D(image, -1, Gs)
+            gradx, grady = np.gradient(smooth)
+            gradxx, gradxy = np.gradient(gradx)
+            gradxy, gradyy = np.gradient(grady)
+            return np.array([[gradxx, gradxy],
+                [gradxy, gradyy]])
+        H = Hessian(image, sigma)
+        return H[0,0] * H[1,1] - H[0,1] * H[1,0]
+    r = BlobCriterion(image, sigma)
+    indices = InterestPointCoord(r, sigma, theta)
+    scale = sigma*np.ones((indices.shape[0], 1))
+    blobs = np.concatenate((indices, scale), axis=1)
+    return blobs
