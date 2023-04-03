@@ -11,26 +11,37 @@ def blobtest():
     up = cv2.imread("cv23_lab1_part12_material/up.png")
     up = cv2.cvtColor(up, cv2.COLOR_BGR2RGB)
     gray = cv2.imread("cv23_lab1_part12_material/up.png", cv2.IMREAD_GRAYSCALE)
+    gray = gray.astype(np.float64)/gray.max()
 
     # play around with the parameters
-    gray = gray.astype(np.float64)/gray.max()
-    blobs = BlobDetection(gray, 2, 0.005)
+    sigma = 2.5
+    theta = 0.005
+    scale = 1.1
+    N = 8
+
+    blobs = BlobDetection(gray, sigma, theta)
     interest_points_visualization(up, blobs, None)
 
     # play around with the parameters
-    blobs = HessianLaplacian(gray, 1.5, 0.05, 2, 4)
+    blobs = HessianLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(up, blobs, None)
 
     cells = cv2.imread("cv23_lab1_part12_material/cells.jpg")
     cells = cv2.cvtColor(cells, cv2.COLOR_BGR2RGB)
     gray = cv2.imread("cv23_lab1_part12_material/cells.jpg", cv2.IMREAD_GRAYSCALE)
+    gray = gray.astype(np.float64)/gray.max()
 
     # play around with the parameters
-    blobs = BlobDetection(gray, 4.5, 0.55)
+    sigma = 3
+    theta = 0.005
+    scale = 1.1
+    N = 8
+
+    blobs = BlobDetection(gray, sigma, theta)
     interest_points_visualization(cells, blobs, None)
 
     # play around with the parameters
-    blobs = HessianLaplacian(gray, 4, 0.35, 1.1, 5)
+    blobs = HessianLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(cells, blobs, None)
 
 blobtest()

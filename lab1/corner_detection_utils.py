@@ -59,8 +59,8 @@ def HarrisLaplacian(image, sigma, rho, theta, k, scale, N):
         # calculate the cornerness criterion
         r = lplus * lminus - k*((lplus + lminus)**2)
         
-        indices = InterestPointCoord(r, sigma, theta)
-        scale = sigma*np.ones((indices.shape[0], 1))
+        indices = InterestPointCoord(r, s, theta)
+        scale = s*np.ones((indices.shape[0], 1))
         corners = np.concatenate((indices, scale), axis=1)
         
         gradsxx.append(gradxx)

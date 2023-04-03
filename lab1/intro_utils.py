@@ -22,27 +22,17 @@ def myfilter(sigma, method):
     if (not (method == "gaussian" or method == "log")):
         print("Error: method has to be either \"gaussian\" or \"log\"")
         exit(2)
-    n = int(np.ceil(3*sigma)*2 + 1)
-    # generating the kernels using meshgrid is
-    # said to be more accurate than multiplying
-    # two 1d gaussian kernels together. That is
-    # because the product of two gaussian functions
-    # is not neccessarily a gaussian function, so
-    # there may be a loss of symmetry between the
-    # x, y axis.
-    x, y = np.meshgrid(np.arange(-n//2+1, n//2+1),
-            np.arange(-n//2+1, n//2+1))
-    kernel = np.exp(-(x**2+y**2)/(2*sigma**2))
-    # this isn't really necessary, it preserves brightness
-    kernel = kernel/np.sum(kernel) 
+    n = int(2*np.ceil(3*sigma)+1)
+    gauss1D = cv2.getGaussianKernel(n, sigma) # Column vector
+    gauss2D = gauss1D @ gauss1D.T # Symmetric gaussian kernel
     if (method == "gaussian"):
-        return kernel
+        return gauss2D
     laplacian = np.array([[0,1,0],
         [1,-4,1],
         [0,1,0]])
     # perform the convolution between the gaussian kernel
     # and the laplacian, in order to create the log kernel
-    logkernel = my2dconv(kernel, laplacian)
+    logkernel = my2dconv(gauss2D, laplacian)
     return logkernel
 
 def smooth_gradient(image, sigma, deg):

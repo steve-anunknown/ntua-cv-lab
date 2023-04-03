@@ -43,7 +43,7 @@ def interest_points_visualization(I_, kp_data_, ax=None):
 
     for i in range(len(kp_data)):
         x, y, sigma = kp_data[i]
-        circ = Circle((x, y), 3*sigma, edgecolor='g', fill=False, linewidth=1)
+        circ = Circle((x, y), 3*sigma, edgecolor='black', fill=False, linewidth=1)
         ax.add_patch(circ)
 
     return ax

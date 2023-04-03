@@ -15,9 +15,9 @@ def edgedetectreal():
     # big sigma => much smoothing => not fine details
     # big theta => less edges, small theta => many edges
 
-    sigma = 0.8
+    sigma = 0.3
     theta = 0.2
-    thetareal = 0.2
+    thetareal = 0.23
 
     N1 = EdgeDetect(kyoto, sigma, theta, "linear")
     N2 = EdgeDetect(kyoto, sigma, theta, "nonlinear")

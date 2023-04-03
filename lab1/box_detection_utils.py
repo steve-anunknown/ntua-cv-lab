@@ -1,9 +1,7 @@
+import cv2
 import numpy as np
 from intro_utils import LogMetric
 from intro_utils import InterestPointCoord
-
-import time
-from intro_utils import smooth_gradient
 
 
 def IntegralImage(i):
@@ -21,117 +19,96 @@ def BoxDerivative(ii, sigma):
     # 1) I'M DOING SOMETHING WRONG HERE (BoxDerivative function)
     # 2) I WAS DOING SOMETHING WRONG EARLIER (smooth_gradient function)
 
-    
-    print("initializing box filtering")
-    n = int(2*np.ceil(3*sigma) + 1)
-    x, y = ii.shape
+    # The smooth gradient functions uses the np.gradient function,
+    # that is precompiled code and runs much faster than python 'for' loops
+    # As per my understanding, the following for loop cannot be expected
+    # to match the speed of the other method.
 
+    n = int(2*np.ceil(3*sigma) + 1)
+    height = int(4*np.floor(n/6) + 1)
+    width = int(2*np.floor(n/6) + 1)
+    padding = int(np.ceil(n/2))
+    mid = int(np.ceil((n-height)/2))
+    #print(ii)
+    iip = np.pad(ii, ((padding, 0), (padding, 0)), 'constant')
+    iip = np.pad(iip, ((0, padding), (0, padding)), 'edge')
+    #print(iip)
+    
+    x, y = ii.shape
     lxx = np.zeros((x,y))
     lyy = np.zeros((x,y))
     lxy = np.zeros((x,y))
-    height, width = int(4*np.floor(n/6) + 1), int(2*np.floor(n/6) + 1)
+    for ix in range(x):
+        tlx = ix + mid
+        for iy in range(y):            
+            tl = (tlx, iy)
+            tr = (tlx, iy + width - 1)
+            bl = (tlx + height, iy)
+            br = (tlx + height, iy + width - 1)
+            lxx[ix, iy] = (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-    heightx, widthx = height, width
-    midhx, midwx = int((heightx - 1)/2), int((widthx - 1)/2)
-    heighty, widthy = width, height
-    midhy, midwy = int((heighty - 1)/2), int((widthy - 1)/2)
-    heightxy, widthxy = width, width
+            tl = (tlx, iy + width)
+            tr = (tlx, iy + 2*width - 1)
+            bl = (tlx + height - 1, iy + width)
+            br = (tlx + height - 1, iy + 2*width - 1)
+            lxx[ix, iy] -= 2*(iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-    # pad with zeroes so as to handle the edge cases
-    # height is greater than width, therefore pad with that
-    ii = np.pad(ii, ((height, height), (height, height)), mode='constant')
-    print("initializing box filtering over")
+            tl = (tlx, iy + 2*width)
+            tr = (tlx, iy + 3*width - 1)
+            bl = (tlx + height - 1, iy + 2*width)
+            br = (tlx + height - 1, iy + 3*width - 1)
+            lxx[ix, iy] += (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-    # (ix, iy) is the centre of the box. iterate through every
-    # pixel of the integral image
-    print("Entering for loop")
-    for ix in range(height, x):
-        # these are some optimization tricks
-        # don't let them scare you
-        heightx1 = ix - midhx
-        heightx2 = ix + midhx
-        for iy in range(height, y):
-            widthx1 = iy - midwx
-            widthx2 = iy + midwx 
-            widthy1 = iy - midwy
-            widthy2 = iy + midwy 
+            tly = iy + mid
+            tl = (ix, tly)
+            tr = (ix, tly + height - 1)
+            bl = (ix + width - 1, tly + height - 1)
+            br = (ix + width - 1, tly)
+            lyy[ix, iy] = (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl1x = ii[heightx1, widthx1 - widthx]
-            tr1x = ii[heightx1, widthx1]
-            br1x = ii[heightx2, widthx1]
-            bl1x = ii[heightx2, widthx1 - widthx]
+            tl = (ix + width, tly + height - 1)
+            tr = (ix + width, tly)
+            bl = (ix + 2*width - 1, tly)
+            br = (ix + 2*width - 1, tly + height - 1)
+            lyy[ix, iy] -= 2*(iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl2x = ii[heightx1, widthx1]
-            tr2x = ii[heightx1, widthx2]
-            br2x = ii[heightx2, widthx2]
-            bl2x = ii[heightx2, widthx1]
+            tl = (ix + 2*width, tly)
+            tr = (ix + 2*width, tly + height - 1)
+            bl = (ix + 3*width - 1, tly)
+            br = (ix + 3*width - 1, tly + height - 1)
+            lyy[ix, iy] += (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl3x = ii[heightx1, widthx2]
-            tr3x = ii[heightx1, widthx2 + widthx]
-            br3x = ii[heightx2, widthx2 + widthx]
-            bl3x = ii[heightx2, widthx2]
+            tlh = ix + 1
+            tlw = iy + 1
+            tl = (tlh, tlw)
+            tr = (tlh, tlw + width - 1)
+            bl = (tlh + width - 1, tlw)
+            br = (tlh + width - 1, tlw + width - 1)
+            lxy[ix, iy] = (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl1y = ii[ix - midhy - heighty, widthy1]
-            tr1y = ii[ix - midhy - heighty, widthy2]
-            br1y = ii[ix - midhy, widthy2]
-            bl1y = ii[ix - midhy, widthy1]
+            tl = (tlh, tlw + width + 1)
+            tr = (tlh, tlw + 2*width)
+            bl = (tlh + width - 1, tlw + width + 1)
+            br = (tlh + width - 1, tlw + 2*width)
+            lxy[ix, iy] -= (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl2y = ii[ix - midhy, widthy1]
-            tr2y = ii[ix - midhy, widthy2]
-            br2y = ii[ix + midhy, widthy2]
-            bl2y = ii[ix + midhy, widthy1]
+            tl = (tlh + width + 1, tlw + width + 1)
+            tr = (tlh + width + 1, tlw + 2*width )
+            bl = (tlh + 2*width, tlw + width + 1)
+            br = (tlh + 2*width, tlw + 2*width)
+            lxy[ix, iy] = (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl3y = ii[ix + midhy, widthy1]
-            tr3y = ii[ix + midhy, widthy2]
-            br3y = ii[ix + midhy + heighty, widthy2]
-            bl3y = ii[ix + midhy + heighty, widthy1]
+            tl = (tlh + width + 1, tlw)
+            tr = (tlh + width + 1, tlw + width - 1)
+            bl = (tlh + 2*width, tlw)
+            br = (tlh + 2*width, tlw + width - 1)
+            lxy[ix, iy] -= (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            tl1xy = ii[ix - 1 - heightxy, iy - 1 - widthxy]
-            tr1xy = ii[ix - 1 - heightxy, iy - 1]
-            br1xy = ii[ix - 1, iy - 1]
-            bl1xy = ii[ix - 1, iy - 1 - widthxy]
-
-            tl2xy = ii[ix - 1 - heightxy, iy + 1]
-            tr2xy = ii[ix - 1 - heightxy, iy + 1 + widthxy]
-            br2xy = ii[ix - 1, iy + 1 + widthxy]
-            bl2xy = ii[ix - 1, iy + 1]
-
-            tl3xy = ii[ix + 1, iy + 1]
-            tr3xy = ii[ix + 1, iy + 1 + widthxy]
-            br3xy = ii[ix + 1 + heightxy, iy + 1 + widthxy]
-            bl3xy = ii[ix + 1 + heightxy, iy + 1]
-
-            tl4xy = ii[ix + 1, iy - 1 - widthxy]
-            tr4xy = ii[ix + 1, iy - 1]
-            br4xy = ii[ix + 1 + heightxy, iy - 1]
-            bl4xy = ii[ix + 1 + heightxy, iy - 1 - widthxy]
-            
-            lxx[ix,iy] = (tl1x - tr1x + br1x - bl1x) - 2*(tl2x - tr2x + br2x - bl2x) + (tl3x - tr3x + br3x - bl3x)
-            lyy[ix,iy] = (tl1y - tr1y + br1y - bl1y) - 2*(tl2y - tr2y + br2y - bl2y) + (tl3y - tr3y + br3y - bl3y)
-            lxy[ix,iy] = (tl1xy - tr1xy + br1xy - bl1xy) - (tl2xy - tr2xy + br2xy - bl2xy) + (tl3xy - tr3xy + br3xy - bl3xy) - (tl4xy - tr4xy + br4xy - bl4xy)
-        
-    print("Exiting for loop")
     return (lxx, lxy, lyy)
 
 def BoxFilters(image, sigma, theta):
-    print("Timing integral image")
-    start = time.time()
     ii = IntegralImage(image)
-    end = time.time()
-    print(end - start)
-
-    print("Timing Box Derivative")
-    start = time.time()
     lxx, lxy, lyy = BoxDerivative(ii, sigma)
-    end = time.time()
-    print(end - start)
-
-    print("Timing Smooth Gradient")
-    start = time.time()
-    sxx, sxy, syy = smooth_gradient(image, sigma, 2)
-    end = time.time()
-    print(end - start)
-
     r = lxx*lyy - (0.9*lxy)**2
     indices = InterestPointCoord(r, sigma, theta)
     scale = sigma*np.ones((indices.shape[0], 1))
@@ -140,7 +117,7 @@ def BoxFilters(image, sigma, theta):
 
 def BoxLaplacian(image, sigma, theta, scale, N):
     scales = [scale**i for i in list(range(N))]
-    sigmas = [sigma*s for s in scales]
+    sigmas = [scale * sigma for scale in scales]
     ii = IntegralImage(image)    
 
     gradsxx = []
@@ -149,8 +126,9 @@ def BoxLaplacian(image, sigma, theta, scale, N):
     for s in sigmas:
         lxx, lxy, lyy = BoxDerivative(ii, s)
         r = lxx*lyy - (0.9*lxy)**2
+        r = (r - r.min())/r.max() # turn to binary
         indices = InterestPointCoord(r, s, theta)
-        scale = sigma*np.ones((indices.shape[0], 1))
+        scale = s*np.ones((indices.shape[0], 1))
         blobs = np.concatenate((indices, scale), axis=1)
 
         gradsxx.append(lxx)
