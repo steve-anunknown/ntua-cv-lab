@@ -26,21 +26,17 @@ def edgedetectintro():
     # Play around with sigma and theta in order to
     # obtain the best results. 
     noised_images = [image10db, image20db]
-    sigma = [1.5, 3]
+    sigma = [3, 1.5]
     theta = [0.2, 0.2]
-    thetareal = 0.01
+    thetareal = 0.08
 
     for index, img in enumerate(noised_images):
         N1 = EdgeDetect(img, sigma[index], theta[index], "linear")
         N2 = EdgeDetect(img, sigma[index], theta[index], "nonlinear")
 
-        # the non linear method gives the best results,
-        # therefore we name it D and continue our evaluation
-        D = N2
         cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
         M = cv2.dilate(image, cross) - cv2.erode(image, cross)
         T = ( M > thetareal ).astype(np.uint8)
-        print(T.shape)
 
         fig, axs = plt.subplots(2,2)
         axs[0, 0].imshow(img, cmap='gray')
@@ -55,8 +51,10 @@ def edgedetectintro():
         plt.pause(0.01)
         plt.savefig(f"image-plots/edges-intro{index}.jpg")
 
-        C = QualityMetric(T, D)
-        print(f"The quality criterion is C[{index}] = {C}")
+        C = QualityMetric(T, N1)
+        print(f"Linear method: C[{index}] = {C}")
+        C = QualityMetric(T, N2)
+        print(f"Non linear method: C[{index}] = {C}")
 
 edgedetectintro()
 plt.show()
