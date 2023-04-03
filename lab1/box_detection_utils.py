@@ -1,4 +1,4 @@
-import cv2
+import numba
 import numpy as np
 from intro_utils import LogMetric
 from intro_utils import InterestPointCoord
@@ -8,6 +8,7 @@ def IntegralImage(i):
     # this definitely works
     return np.cumsum(np.cumsum(i, axis=0), axis=1)
 
+@numba.jit
 def BoxDerivative(ii, sigma):
     # this needs extremely hard checking
 
@@ -29,10 +30,8 @@ def BoxDerivative(ii, sigma):
     width = int(2*np.floor(n/6) + 1)
     padding = int(np.ceil(n/2))
     mid = int(np.ceil((n-height)/2))
-    #print(ii)
     iip = np.pad(ii, ((padding, 0), (padding, 0)), 'constant')
     iip = np.pad(iip, ((0, padding), (0, padding)), 'edge')
-    #print(iip)
     
     x, y = ii.shape
     lxx = np.zeros((x,y))
@@ -60,8 +59,7 @@ def BoxDerivative(ii, sigma):
             br = (tlx + height - 1, iy + 3*width - 1)
             lxx[ix, iy] += (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
-            # ============ calculate y gradient ============ #
-            
+            # ============ calculate y gradient ============ #            
             tly = iy + mid
             tl = (ix, tly)
             tr = (ix, tly + height - 1)
@@ -82,7 +80,6 @@ def BoxDerivative(ii, sigma):
             lyy[ix, iy] += (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
             # ============ calculate xy gradient ============ #
-
             tlh = ix + 1
             tlw = iy + 1
             tl = (tlh, tlw)

@@ -20,7 +20,7 @@ def boxtest():
 
     # play around with the parameters
     sigma = 2.5
-    theta = 0.03
+    theta = 0.05
 
     blobs = BoxFilters(gray, sigma, theta)
     interest_points_visualization(up, blobs, None)
@@ -28,7 +28,7 @@ def boxtest():
 
     # play around with the parameters
     sigma = 2.5
-    theta = 0.3
+    theta = 0.6
     scale = 1.1
     N = 8
 
