@@ -40,7 +40,8 @@ def BoxDerivative(ii, sigma):
     lxy = np.zeros((x,y))
     for ix in range(x):
         tlx = ix + mid
-        for iy in range(y):            
+        for iy in range(y):
+            # ============ calculate x gradient ============ #
             tl = (tlx, iy)
             tr = (tlx, iy + width - 1)
             bl = (tlx + height, iy)
@@ -59,6 +60,8 @@ def BoxDerivative(ii, sigma):
             br = (tlx + height - 1, iy + 3*width - 1)
             lxx[ix, iy] += (iip[tl] - iip[tr] + iip[br] - iip[bl])
 
+            # ============ calculate y gradient ============ #
+            
             tly = iy + mid
             tl = (ix, tly)
             tr = (ix, tly + height - 1)
@@ -77,6 +80,8 @@ def BoxDerivative(ii, sigma):
             bl = (ix + 3*width - 1, tly)
             br = (ix + 3*width - 1, tly + height - 1)
             lyy[ix, iy] += (iip[tl] - iip[tr] + iip[br] - iip[bl])
+
+            # ============ calculate xy gradient ============ #
 
             tlh = ix + 1
             tlw = iy + 1
