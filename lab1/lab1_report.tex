@@ -15,14 +15,13 @@
 
 \lstset{
     language=Python,
+    backgroundcolor=\color{lightgray},
     basicstyle=\ttfamily,
     keywordstyle=\color{blue}\ttfamily,
     stringstyle=\color{red}\ttfamily,
     commentstyle=\color{green}\ttfamily,
     morecomment=[l][\color{magenta}]{\#}
 }
-
-
 
 \title{Όραση Υπολογιστών\\
         \large Εργαστήριο 1}
@@ -41,7 +40,7 @@
 
 \subsection{Δημιουργία Εικόνων Εισόδου}
 
-Το παρακάτω τμήμα κώδικα διαβάζει την εικόνα, μετατρέποντάς την σε γκρίζα, και την κανονικοποιεί. Στην συνέχεια, την εκτυπώνει, για να φανεί ότι διαβάστηκε επιτυχώς, και προστίθενται σε αυτήν θόρυβοι διαφορετικής εντάσεως, χρήσει των συναρτήσεων \eng{\texttt{getstd}}.
+Το παρακάτω τμήμα κώδικα διαβάζει την εικόνα, μετατρέποντάς την σε γκρίζα, και την κανονικοποιεί. Στην συνέχεια, την εκτυπώνει, για να φανεί ότι διαβάστηκε επιτυχώς, και προστίθενται σε αυτήν θόρυβοι διαφορετικής εντάσεως, χρήσει των συναρτήσεων \eng{\texttt{getstd}}. Στο σημείο αυτό σημειώνεται, ότι ο θόρυβος 10\eng{dB} είναι μεγαλύτερης έντασης του 20\eng{dB}.
 
 \selectlanguage{english}
 \begin{lstlisting}[breaklines=true, showstringspaces=false]
@@ -67,7 +66,8 @@
 
 \subsection{Υλοποίηση Αλγορίθμων Ανίχνευσης Ακμών}
 
-Αρχικά, υλοποιείται κατάλληλη συνάρτηση για δημιουργία των δύο επιθυμητών γραμμικών φίλτρων, τα οποία προσεγγίζουν τα συνεχή φίλτρα με τις αποκρίσεις
+Για την ανίχνευση ακμών, υλοποιείται κατάλληλη συνάρτηση για δημιουργία των δύο επιθυμητών γραμμικών φίλτρων, τα οποία προσεγγίζουν τα συνεχή φίλτρα με τις αποκρίσεις:
+
 \begin{enumerate}
     \item \eng{2D Gaussian} $G_{\sigma}(x, y)$
     \item\eng{ Laplacian-of-Gaussian (LoG)}  $h(x, y) = \nabla^2 G_{\sigma}(x, y)$
@@ -139,13 +139,10 @@ def EdgeDetect(image, sigma, theta, method):
         # the cross structuring element
         imgloged = cv2.dilate(smooth, cross) + cv2.erode(smooth, cross) - 2*smooth
     
-    # the imgloged variable is visible only if one of the if blocks
-    # get executed. hopefully, this always happens
     L = imgloged
-    
     # type uin8 is needed for compatibility with the
-    # dilate and erode functions. otherwise, the matrix's
-    # elements would have boolean type.
+    # dilate and erode functions. otherwise,
+    # the matrix's elements would have boolean type.
     X = (L > 0).astype(np.uint8)
     Y = (cv2.dilate(X, cross)) - (cv2.erode(X, cross))
 
@@ -197,8 +194,6 @@ T = ( M > thetareal ).astype(np.uint8)
 
 \selectlanguage{english}
 \begin{lstlisting}[breaklines=true, showstringspaces=false]
-
-
 def edgedetectintro():
     # read the image, convert to gray scale and normalize it
     image = cv2.imread("cv23_lab1_part12_material/edgetest_23.png", cv2.IMREAD_GRAYSCALE)
@@ -218,17 +213,14 @@ def edgedetectintro():
     # Play around with sigma and theta in order to
     # obtain the best results. 
     noised_images = [image10db, image20db]
-    sigma = [1.5, 3]
+    sigma = [3, 1.5]
     theta = [0.2, 0.2]
-    thetareal = 0.01
+    thetareal = 0.08
 
     for index, img in enumerate(noised_images):
         N1 = EdgeDetect(img,sigma[index],theta[index],"linear")
         N2 = EdgeDetect(img,sigma[index],theta[index],"nonlinear")
 
-        # the non linear method gives the best results
-        # therefore we name it D and continue our evaluation
-        D = N2
         cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
         M = cv2.dilate(image, cross) - cv2.erode(image, cross)
         T = ( M > thetareal ).astype(np.uint8)
@@ -237,30 +229,204 @@ def edgedetectintro():
         axs[0,0].imshow(img, cmap='gray')
         axs[0,0].set_title("Noised Image")
         axs[0,1].imshow(N1, cmap='gray')
-        axs[0,1].set_title("Linear method")
+        axs[0,1].set_title("Linear Method")
         axs[1,0].imshow(N2, cmap='gray')
-        axs[1,0].set_title("Non linear method")
+        axs[1,0].set_title("Non linear Method")
         axs[1,1].imshow(T, cmap='gray')
         axs[1,1].set_title("Actual Edges")
         plt.show(block=False)
         plt.pause(0.01)
         plt.savefig(f"image-plots/edges-intro{index}.jpg")
 
-        C = QualityMetric(T, D)
-        print(f"The quality criterion is C[{index}] = {C}")
+        C = QualityMetric(T, N1)
+        print(f"Linear method: C[{index}] = {C}")
+        C = QualityMetric(T, N2)
+        print(f"Non linear method: C[{index}] = {C}")
+\end{lstlisting}
+\selectlanguage{greek}
+
+Κατόπιν δοκιμών, οι παρακάτω παράμετροι έδιναν τα βέλτιστα αποτελέσματα.
+\begin{equation}
+    \begin{gathered}
+        \sigma = \begin{bmatrix}3 & 1.5 \end{bmatrix},
+        \theta = \begin{bmatrix}0.2 & 0.2 \end{bmatrix},
+        \theta_{real} = 0,08\\
+        C_{10db-lin} = 0.6182010279466628\\
+        C_{10db-non} = 0.7362110886293316\\
+        C_{20db-lin} = 0.9375887192342924\\
+        C_{20db-non} = 0.9671201094187654\\
+    \end{gathered}
+\end{equation}
+
+\subsection{Εφαρμογή των Αλγορίθμων Ανίχνευσης Ακμών σε Πραγματικές Εικόνες}
+
+Η παραπάνω αναπτυχθείσα μέθοδος δοκιμάζεται τώρα σε πραγματική, μη θορυβημένη εικόνα. Η εικόνα είναι ένα στιγμιότυπο της πόλης Κιότο της Ιαπωνίας και περιέχει αρκετές λεπτές ακμές. Για τον λόγο αυτόν, ήταν αναγκαία η χρήση μικρής παραμέτρου εξομάλυνσης, ώστε να μπορέσουν να εντοπιστούν οι ακμές, αλλά όχι τόσο μικρής ώστε να αναγνωριστούν ψεύτικες ακμές.
+
+\selectlanguage{english}
+\begin{lstlisting}[breaklines=true, showstringspaces=false]
+def edgedetectreal():
+    # read image and normalize it
+    kyoto = cv2.imread("cv23_lab1_part12_material/kyoto_edges.jpg", cv2.IMREAD_GRAYSCALE)
+    kyoto = kyoto.astype(np.float64)/kyoto.max()
+
+    # play around with sigma and theta
+    # big sigma => much smoothing => not fine details
+    # big theta => less edges
+    # small theta => many edges
+
+    sigma = 0.3
+    theta = 0.2
+    thetareal = 0.23
+
+    N1 = EdgeDetect(kyoto, sigma, theta, "linear")
+    N2 = EdgeDetect(kyoto, sigma, theta, "nonlinear")
+
+    cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+    M = cv2.dilate(kyoto, cross) - cv2.erode(kyoto, cross)
+    T = ( M > thetareal ).astype(np.uint8)
+
+    fig, axs = plt.subplots(2,2)
+    axs[0,0].imshow(kyoto, cmap='gray')
+    axs[0,0].set_title("Gray Image")
+    axs[0,1].imshow(T, cmap='gray')
+    axs[0,1].set_title("Actual Edges")
+    axs[1,0].imshow(N1, cmap='gray')
+    axs[1,0].set_title("Linear edge detection")
+    axs[1,1].imshow(N2, cmap='gray')
+    axs[1,1].set_title("Non Linear edge detection")
+    plt.show(block=False)
+    plt.pause(0.01)
+    plt.savefig("image-plots/edges-real.jpg")
+
+    C = QualityMetric(T, N1)
+    print(f"Linear edge detection is C = {C}")
+    C = QualityMetric(T, N2)
+    print(f"Non linear edge detection is C = {C}")
 
 \end{lstlisting}
 \selectlanguage{greek}
 
+Τελικά, οι επιλεχθείσες παράμετροι και τα αντίστοιχα αποτελέσματα ήταν:
 
+\begin{equation}
+    \begin{gathered}
+        \sigma = 0.3, \theta = 0.2, \theta_{real} = 0.23 \\
+        Linear edge detection is C = 0.818604135617401\\
+        Non linear edge detection is C = 0.8188562865181751
+    \end{gathered}
+\end{equation}
 
-
-
-\subsection{Εφαρμογή των Αλγορίθμων Ανίχνευσης Ακμών σε Πραγματικές Εικόνες}
+Παρατηρείται, ότι τόσο η γραμμική όσο και η μη γραμμική μέθοδος δίνουν παραπλήσια και ικανοποιητικά αποτελέσματα, με την μη γραμμική μέθοδο να είναι ελαφρώς πιο αποτελεσματική.
 
 \section{Μέρος 2ο}
 
+Στο μέρος αυτό επιχειρείται ο γενικότερος εντοπισμός σημείων ενδιαφέροντως. Για αυτόν τον λόγο, αναπτύσσονται διάφορες τεχνικές, οι οποίες αναζητούν διαφόρων ειδών σημεία, σε μία ή πολλαπλές κλίμακες.
 
+\subsection{Βοηθητικές Συναρτήσεις}
+
+Κατά την διάρκεια εκπόνησης της εργασίας, παρατηρήθηκε ότι ο ίδιος κώδικας επαναλαμβανόταν σε σχεδόν όλες τις μεθόδους, απλώς με διαφορετικές παραμέτρους. Προς αποφυγή, λοιπόν, κουραστικής επανάληψης, αναπτύχθηκαν οι ακόλουθες συναρτήσεις, οι οποίες θα χρησιμοποιούνται στις παρακάτω μεθόδους με σκοπό να είναι πιο εύληπτη η διατύπωσή τους.
+
+Η συνάρτηση \eng{\texttt{InterestPointCoord}} επιστρέφει τις συντεταγμένες των σημείων ενδιαφέροντος, βάσει του εκάστοτε κριτηρίου.
+
+\selectlanguage{english}
+\begin{lstlisting}[breaklines=true, showstringspaces=false]
+def InterestPointCoord(r, sigma, theta):
+    # r is a previously evaluated criterion
+    # sigma is used for the size of the structure
+    # theta is a threshold
+
+    # evaluate the following 2 conditions
+    # condition 1
+    ns = 2*np.ceil(3*sigma) + 1
+    bsq = disk_strel(ns)
+    cond1 = ( r == cv2.dilate(r, bsq) )
+    # condition 2
+    maxr = np.max(r)
+    cond2 = ( r > theta * maxr )
+    # choose the pixels that satisfy both of them
+    # return their coordinates and their scale
+    x, y = np.where(cond1 & cond2)
+    # for compatibility with the utility function
+    # provided by the lab staff, the y coordinate
+    # has to come before the x coordinate
+    indices = np.column_stack((y,x))
+    return indices
+\end{lstlisting}
+\selectlanguage{greek}
+
+Η συνάρτηση \eng{\texttt{LogMetric}} εφαρμόζει την \eng{LoG} μετρική ώστε να επιλέξει ως σημεία ενδιαφέροντος αυτά τα οποία μεγιστοποιούν την μετρική σε γειτονιά εύρους 3 κλιμάκων. Επιστρέφει τις συντεταγμένες των σημείων ενδιαφέροντος και την κλίμακα του καθενός.
+
+\selectlanguage{english}
+\begin{lstlisting}[breaklines=true, showstringspaces=false]
+def LogMetric(logs, itemsperscale, N):
+    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+    # returns the coordinates of the points that maximize
+    # the log metric in a neighborhood of 3 scales
+    # (prev scale), (curr scale), (next scale)
+    final = []
+    for index, items in enumerate(itemsperscale):
+        logp = logs[max(index-1,0)]
+        logc = logs[index]
+        logn = logs[min(index+1,N-1)] 
+        for triplet in items:
+            x = int(triplet[1])
+            y = int(triplet[0])
+            prev = logp[x,y]
+            curr = logc[x,y]
+            next = logn[x,y]
+            if (curr >= prev) and (curr >= next):
+                final.append(triplet)
+    return np.array(final)
+\end{lstlisting}
+\selectlanguage{greek}
+
+Τέλος, η συνάρτηση \eng{\texttt{smooth\_gradient}} υπολογίζει τις παραγώγους της εξομαλυμένης εικόνας. Αναλόγως της παραμέτρου \eng{deg} επιστρέφει πρώτου, δευτέρου ή και των δύο βαθμών τις παραγώγους.
+
+\selectlanguage{english}
+\begin{lstlisting}[breaklines=true, showstringspaces=false]
+def smooth_gradient(image, sigma, deg):
+    # define the filters according to the arguments
+    Gs = myfilter(sigma, "gaussian")
+    # smoothen the image
+    smooth = cv2.filter2D(image, -1, Gs)
+    # calculate the gradient on both directions 
+    gradx, grady = np.gradient(smooth)
+    if (deg==1):
+        return (gradx, grady)
+    elif (deg==2):
+        gradxx, gradxy = np.gradient(gradx)
+        gradxy, gradyy = np.gradient(grady)
+        return (gradxx, gradxy, gradyy)
+    elif (deg==3):
+        gradxx, gradxy = np.gradient(gradx)
+        gradxy, gradyy = np.gradient(grady)
+        return (gradx, grady, gradxx, gradxy, gradyy)
+    print("deg = 1 for (gradx, grady)")
+    print("deg = 2 for (gradxx, gradxy, gradyy)")
+    print("deg = 3 for (gradx, grady, gradxx, gradxy, gradyy)")
+    exit(2)
+\end{lstlisting}
+\selectlanguage{greek}
+
+\subsection{Ανίχνευση Γωνιών}
+
+
+
+\subsection{Πολυκλιμακωτή Ανίχνευση Γωνιών}
+
+
+\subsection{Ανίχνευση \eng{Blobs}}
+
+
+
+\subsection{Πολυκλιμακωτή Ανίχνευση \eng{Blobs}}
+
+
+\subsection{Επιτάχυνση Ανίχνευσης \eng{Blobs}}
+
+
+
+\subsection{Επιτάχυνση Πολυκλιμακωτή Ανίχνευσης \eng{Blobs}}
 
 
 \end{document}
