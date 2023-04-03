@@ -24,6 +24,7 @@ def boxtest():
 
     blobs = BoxFilters(gray, sigma, theta)
     interest_points_visualization(up, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-ii-up.jpg")
 
     # play around with the parameters
     sigma = 2.5
@@ -33,6 +34,7 @@ def boxtest():
 
     blobs = BoxLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(up, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-multiscale-ii-up.jpg")
 
     cells = cv2.imread("cv23_lab1_part12_material/cells.jpg")
     cells = cv2.cvtColor(cells, cv2.COLOR_BGR2RGB)
@@ -45,6 +47,7 @@ def boxtest():
 
     blobs = BoxFilters(gray, sigma, theta)
     interest_points_visualization(cells, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-multiscale-ii-cells.jpg")
     
     # play around with the parameters
     sigma = 3
@@ -54,6 +57,7 @@ def boxtest():
 
     blobs = BoxLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(cells, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-multiscale-ii-cells.jpg")
 
 boxtest()
 plt.show()

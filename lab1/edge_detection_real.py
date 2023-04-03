@@ -31,7 +31,7 @@ def edgedetectreal():
 
     fig, axs = plt.subplots(2,2)
     axs[0, 0].imshow(kyoto, cmap='gray')
-    axs[0, 0].set_title("Noised Image")
+    axs[0, 0].set_title("Gray Image")
     axs[0, 1].imshow(T, cmap='gray')
     axs[0, 1].set_title("Actual Edges")
     axs[1, 0].imshow(N1, cmap='gray')
@@ -40,6 +40,7 @@ def edgedetectreal():
     axs[1, 1].set_title("Non Linear edge detection")
     plt.show(block=False)
     plt.pause(0.01)
+    plt.savefig(f"image-plots/edges-real.jpg")
 
     C = QualityMetric(T, D)
     print(f"The quality criterion of the linear edge detection is C = {C}")

@@ -53,6 +53,7 @@ def edgedetectintro():
         axs[1, 1].set_title("Actual Edges")
         plt.show(block=False)
         plt.pause(0.01)
+        plt.savefig(f"image-plots/edges-intro{index}.jpg")
 
         C = QualityMetric(T, D)
         print(f"The quality criterion is C[{index}] = {C}")

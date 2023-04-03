@@ -21,10 +21,12 @@ def blobtest():
 
     blobs = BlobDetection(gray, sigma, theta)
     interest_points_visualization(up, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-up.jpg")
 
     # play around with the parameters
     blobs = HessianLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(up, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-multiscale-up.jpg")
 
     cells = cv2.imread("cv23_lab1_part12_material/cells.jpg")
     cells = cv2.cvtColor(cells, cv2.COLOR_BGR2RGB)
@@ -39,10 +41,12 @@ def blobtest():
 
     blobs = BlobDetection(gray, sigma, theta)
     interest_points_visualization(cells, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-cells.jpg")
 
     # play around with the parameters
     blobs = HessianLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(cells, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-multiscale-cells.jpg")
 
 blobtest()
 plt.show()
