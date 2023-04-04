@@ -19,7 +19,7 @@ def cornertest():
     plt.savefig(f"image-plots/corner-detection.jpg")
     
     # play around with the parameters
-    corners = HarrisLaplacian(gray, 2, 2.5, 0.05, 0.1, 1.1, 8)
+    corners = HarrisLaplacian(gray, 2, 2.5, 0.005, 0.1, 1.1, 6)
     interest_points_visualization(kyoto, corners, None)
     plt.savefig(f"image-plots/corner-detection-multiscale.jpg")
 

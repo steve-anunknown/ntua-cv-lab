@@ -1,15 +1,18 @@
 \documentclass{article}
 \usepackage[english,greek, main=greek]{babel}
 \usepackage[utf8]{inputenc}
+
 \usepackage{amsmath}
 \usepackage{chngcntr}
 \counterwithin{equation}{section}
-\usepackage{titling}
-\usepackage{tikz}
-\usepackage{pgfplots}
-\usepackage{listings}
+
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{placeins}
+
 \newcommand{\eng}[1]{\foreignlanguage{english}{#1}}
 \newcommand{\Alpha}{\mathrm{A}}
+
 \useshorthands{;}
 \defineshorthand{;}{?}
 
@@ -30,17 +33,260 @@
 
 \subsection{Δημιουργία Εικόνων Εισόδου}
 
+Οι εικόνες εισόδου δημιουργούνται διαβάζοντας την δεδομένη εικόνα ''\eng{edgetest\_23.png}`` και προσθέτοντας θόρυβο σε αυτήν. Προστίθεται αντιστοίχως θόρυβος με \eng{PSNR} 20\eng{dB} και θόρυβος με \eng{PSNR} 10\eng{dB}. Αξιοσημειώτο είναι, ότι ο πρώτος θόρυβος είναι στην πραγματικότητα λιγότερος από τον δεύτερον. Το \eng{PSNR} ορίζεται ως εξής:
+
+\begin{equation}
+    \begin{gathered}
+        PSNR = 20\log_{10} \left(\frac{I_{max}-I_{min}}{\sigma_n} \right)(dB),\\
+        I_{max} = \underset{x,y} {max} I(x,y), I_{min} = \underset{x,y} {min} I(x,y)
+    \end{gathered}
+\end{equation}
+
+Φαίνεται ότι από τον ορισμό μπορεί να ληφθεί η μεταβλητότητα του θορύβου, βάσει της οποίας τελικά αυτός ορίζεται. Από την έκφραση της μεταβλητότας, μάλιστα, φαίνεται ότι, όσο μεγαλύτερο το \eng{PSNR} σε \eng{dB} τόσο μικρότερη είναι τελικά η μεταβλητότητα του θορύβου, πράγμα που επαληθεύει τα προαναφερθέντα.
+
+\begin{equation}
+    \sigma_n = \frac{\left(I_{max}-I_{min}\right)}{10^{\frac{PSNR}{20}}}
+\end{equation}
+
 \subsection{Υλοποίηση Αλγορίθμων Ανίχνευσης Ακμών}
+
+Η συνάρτηση που θα αναπτυχθεί εφαρμόζει είτε γραμμική είτε μη γραμμική μέθοδο ανίχνευσης ακμών.
+
+\subsubsection{Γραμμική Μέθοδος}
+
+Η μεν γραμμική μέθοδος επιχειρεί την προσέγγιση της λαπλασιανής της εξομαλυμένης εικόνας χρήσει γραμμικών φίλτρων. Συγκεκριμένα, σύμφωνα με την γραμμική μέθοδο:
+
+\begin{equation}
+    L = \nabla^2 \left(G_{\sigma} * I\right) = \left( \nabla^2 G_{\sigma} \right) * I
+\end{equation}
+
+\subsubsection{Μη Γραμμική Μέθοδος}
+
+Η δε μη γραμμική μέθοδος επιχειρεί την προσέγγιση της λαπλασιανής της εξομαλυμένης εικόνας χρήσει μορφολογικών τελεστών. Συγκεκριμένα, σύμφωνα με την μη γραμμική μέθοδο:
+
+\begin{equation}
+    \begin{gathered}
+        I_{\sigma} = G_{\sigma} * I, \\
+        L = I_{\sigma} \oplus B + I_{\sigma} \ominus B - 2I_{\sigma}
+    \end{gathered}
+\end{equation}
+
+Αμφότερες οι μέθοδοι, στην συνέχεια, προσεγγίζουν τα σημεία μηδενισμού της λαπλασιανής. Το κάνουν αυτό δημιουργόντας από την λαπλασιανή μία δυαδική εικόνα και βρίσκοντας στην συνέχεια το περίγραμμά της. Τα σημεία μηδενισμού είναι τα σημεία στα οποία το περίγραμμα έχει μοναδιαία τιμή.
+
+\begin{equation}
+    \begin{gathered}
+        X = (L >= 0)\\
+        Y = (X \oplus B) - (X \ominus B)\\
+        (i, j) = \arg \left| Y = 1  \right|
+    \end{gathered}
+\end{equation}
+
+Επειδή, όμως, το κριτήριο αυτό επιστρέφει και σημεία τα οποία δεν ανήκουν σε πραγματικές ακμές, τελικά επιλέγονται τα σημεία αυτά στα οποία η εξομαλυμένη εικόνα παρουσιάζει μεγάλη κλίση:
+
+\begin{equation}
+    Y[i, j] = 1 \wedge \lVert \nabla I_{\sigma}[i,j] \rVert > \theta_{edge} \cdot  \underset{x, y} \max \lVert \nabla I_{\sigma} \rVert
+\end{equation}
+
+Η ποιότητα της ανίχνευσης ακμών εξαρτάται από την επιλογή των παραμέτρων $\sigma, \theta_{edge}$, δηλαδή αντιστοίχως της παραμέτρου εξομάλυνσης και του κατωφλιού για την αποδοχή μίας ακμής.
 
 \subsection{Αξιολόγηση των Αποτελεσμάτων Ανίσχνευσης Ακμών}
 
+Για να αξιολόγηση των αποτελεσμάτων της συνάρτησης, πρέπει να οριστεί ένα ποιοτικό κριτήριο. Εν προκειμένω ορίζεται ο μέσος όρος μεταξύ των αληθώς ανισχνευθεισών ακμών και των ψευδών ανιχνευθεισών ακμών. Φυσικά, είναι αναγκαία η πληροφορία των αληθινών ακμών. Αυτές βρίσκονται από την αυθεντική, μη θορυβημένη εικόνα, χρήσει ενώ κατωφλιού ως εξής:
+
+\begin{equation}
+    M = (I \oplus B) - (I \ominus B) \Rightarrow \\
+    T = (M > \theta_{real})
+\end{equation}
+
+Δεδομένων, λοιπόν, των αληθινών ακμών, το ποιοτικό κριτήριο διατυπώνεται ως:
+
+\begin{equation}
+    \begin{gathered}
+        C = \frac{Pr(D|T) + PR(T|D)}{2}, \\
+        Pr(T|D) = \frac{\lVert D \cap T \rVert}{\lVert T \rVert}
+    \end{gathered}
+\end{equation}
+
+\subsection{Αποτελέσματα Εφαρμογής της Συνάρτησης}
+
+Παρατίθενται τα αποτελέσματα εφαρμογής της μεθόδου στην εικόνας \eng{edgetest\_23.png}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{image-plots/edgetest_23.png}
+    \caption{Η δεδομένη εικόνα εισόδου}
+    \label{fig:edge-test}
+\end{figure}
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{image-plots/edges-intro0.jpg}
+    \caption{Θόρυβος \eng{PSNR} 10\eng{dB}}
+    \label{fig:noise 10db}
+\end{figure}
+\FloatBarrier
+
+Όταν η εικόνα \ref{fig:edge-test} θορυβήθηκε με θόρυβο 10 \eng{dB PSNR}, τα αποτελέσματα ήταν αυτά που φαίνονται στην \ref{fig:noise 10db} και οι βαθμολογίες στο κριτήριο ποιότητας οι ακόλουθες:
+
+\begin{equation}
+    \begin{gathered}
+        C_{10db-lin} = 0.6182010279466628\\
+        C_{10db-non} = 0.7362110886293316\\
+    \end{gathered}
+\end{equation}
+
+Ενώ όταν η εικόνα θορυβήθηκε με θόρυβο 20 \eng{dB PSNR}, τα αποτελέσματα ήταν:
+
+\begin{figure}[h]
+        \includegraphics[width=\textwidth]{image-plots/edges-intro0.jpg}
+        \caption{Θόρυβος \eng{PSNR} 20\eng{dB}}
+\end{figure}
+\FloatBarrier
+
+Με κριτήριο ποιότητας:
+
+\begin{equation}
+    \begin{gathered}
+        C_{20db-lin} = 0.9375887192342924\\
+        C_{20db-non} = 0.9671201094187654\\
+    \end{gathered}
+\end{equation}
+
+Τα αποτελέσματα επιτεύχθηκαν με τις ακόλουθες παράμετρους:
+
+\begin{equation}
+    \begin{gathered}
+        \sigma = \begin{bmatrix}3 & 1.5 \end{bmatrix},
+        \theta = \begin{bmatrix}0.2 & 0.2 \end{bmatrix},
+        \theta_{real} = 0,08\\
+    \end{gathered}
+\end{equation}
+
+Παρατηρείται ότι η επίδραση του θορύβου είναι καθοριστική, καθώς στην εικόνα με τον λίγοτερο θόρυβο επιτυγχάνεται καλύτερη βαθμολογία στο ποιοτικό κριτήριο. Επίσης, φαίνεται ότι η μη γραμμική μέθοδος πετυχαίνει καλύτερα αποτελέσματα σε κάθε περίπτωση.
+
 \subsection{Εφαρμογή των Αλγορίθμων Ανίχνευσης Ακμών σε Πραγματικές Εικόνες}
+
+Η ίδια συνάρτηση χρησιμοποιήθηκε και για την ανίχνευση ακμών στην πραγματική εικόνα του \eng{Kyoto}, όπως φαίνεται στην εικόνα \ref{fig:kyoto}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{image-plots/kyoto_edges.jpg}
+    \caption{Η πραγματική φωτογραφιά του \eng{Kyoto}}
+    \label{fig:kyoto}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{image-plots/edges-real.jpg}
+    \caption{Ανίχνευση ακμών στην πραγματική φωτογραφιά του \eng{Kyoto}}
+    \label{fig:kyoto-edges}
+\end{figure}
+\FloatBarrier
+
+Η επεξεργασία έγινε με τις παραμέτρους:
+
+\begin{equation}
+    \begin{gathered}
+        \sigma = 0.3, \theta = 0.2, \theta_{real} = 0.23 \\
+    \end{gathered}
+\end{equation}
+
+και πέτυχε τις βαθμολογίες:
+
+\begin{equation}
+    \begin{gathered}
+        C_{lin} = 0.818604135617401\\
+        C_{non} = 0.8188562865181751
+    \end{gathered}
+\end{equation}
+
+Τα δε οπτικά αποτελέσματα φαίνονται στην εικόνα \ref{fig:kyoto-edges}. Τόσο από την βαθμολογία στο ποιοτικό κριτήριο όσο και οπτικά, φαίνεται ότι αμφότερες η γραμμική και η μη γραμμική μέθοδος έδωσαν πολύ καλά αποτελέσματα.
 
 \section{Μέρος 2ο}
 
+Στο σημείο αυτό της εργασίας θα επιχειρηθεί η ανίχνευση διαφόρων χαρακτηριστικών, τόσο σε μία μόνο κλίμακα όσο και σε πολλαπλές κλίμακες.
+
 \subsection{Ανίχνευση Γωνιών}
 
+Πρώτα επιχειρείται ανίχνευση γωνιών. Θα παρουσιαστεί η μεθοδολογία και ταυτοχρόνως τα βήματα της επεξεργασίας, για να γίνει σαφής.
+
+Αρχικά υπολογίζεται ο δομικός τανυστής \eng{\textbf{J}} και οι ιδιοτιμές του. 
+
+\begin{equation}
+    \begin{gathered}
+        J_1(x, y) = G_{\rho} * \left(\frac{\partial I_\sigma}{\partial x} \cdot \frac{\partial I_\sigma}{\partial x} \right)(x, y)\\
+        J_2(x, y) = G_{\rho} * \left( \frac{\partial I_\sigma}{\partial x} \cdot \frac{\partial I_\sigma}{\partial y} \right)(x, y)\\
+        J_3(x, y) = G_{\rho} * \left( \frac{\partial I_\sigma}{\partial y} \cdot \frac{\partial I_\sigma}{\partial y} \right)(x, y)\\
+        \lambda_{\pm}(x, y) = \frac{1}{2} \left(J_1 + J_2 \pm \sqrt{\left (J_1 - J_3\right)^2 + 4J_2^2} \right)
+    \end{gathered}
+\end{equation}
+
+Οι ιδιοτιμές περιέχουν χρήσιμη πληροφορία σχετικά με τις ακμές και τις γωνίες της εικόνας. Παρακάτω, στην εικόνα \ref{fig:kyoto-eigenvalues}, δίνεται η απεικόνισή τους ως γκρίζες εικόνες.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{image-plots/corner-detection-eigenvalues-scaled.jpg}
+    \caption{Απεικόνιση των ιδιοτιμών της εικόνας ως γκρίζες εικόνες}
+    \label{fig:kyoto-eigenvalues}
+\end{figure}
+\FloatBarrier
+
+Φαίνεται ότι η εικόνα η αντιστοιχούσα στην ιδιοτιμή ''-`` αποτυπώνει έντονα τις απολήξεις του πύργου, δηλαδή τις αιχμηρές γωνίες, ενώ η εικόνα αντιστοιχούσα στην ιδιοτιμή ``+'' αποτυπώνει έντονα τα περιγράμματα, δηλαδή τις ακμές.
+
+Στην συνέχεια, εξάγεται ένα κριτήριο γωνιότητας συναρτήσει των ιδιοτιμών και μίας σταθεράς $k$:
+
+\begin{equation}
+    R(x, y) = \lambda_{-}\lambda_{+} - k\cdot\left(\lambda_{-} + \lambda_{+}\right)^2
+\end{equation}
+
+Τέλος, επιλέγονται ως γωνίες τα σημεία αυτά τα οποία μεγιστοποιούν το κριτήριο εντός τετραγωνικών παραθύρων και αποδίδουν στο κριτήριο γωνιότητας τιμή μεγαλύτερη από ένα κατώφλι.
+
+\begin{equation}
+    \begin{gathered}
+        R(x, y) > \theta_{corn} \cdot R_{max} 
+    \end{gathered}
+\end{equation}
+
+Το αποτέλεσμα εφαρμογής αυτών των συνθηκών στην εικόνα-κριτήριο $R$, για τις παραμέτρους $\sigma = 2, \rho = 2.5, k = 0.05, \theta_{corn} = 0.1$ είναι το ακόλουθο:
+       
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{image-plots/corner-detection.jpg}
+    \caption{Ανίχνευση γωνιών στην εικόνα \eng{Kyoto}}
+    \label{fig:kyoto-corners}
+\end{figure}
+\FloatBarrier
+
+Φαίνεται ότι έχουν εντοπιστεί με επιτυχία πολλές γωνίες, ειδικά οι αιχμηρές απολίξεις του πύργου αλλά και οι ορθές γωνίες οι σχηματιζόμενες από τους πασάλους των κτιρίτων. Ωστόσο, έχουν αναγνωριστει ως γωνίες και ανεπιθύμητα σημεία, όπως τα κλαδιά του δέντρου. Επομένως, συμπεραίνεται ότι η μέθοδος είναι αποτελεσματική αλλά έχει περιθώριο βελτίωσης.
+
 \subsection{Πολυκλιμακωτή Ανίχνευση Γωνιών}
+
+Ένα σημαντικό μειονέκτημα της προηγούμενης μεθόδου ήταν ότι περιοριζόταν σε μία μόνο κλίμακα, αφού δεχόταν μόνο ένα ζευγάρι παραμέτρων $(\sigma, \rho)$. Η ιδέα είναι να εφαρμοσθεί η ίδια μέθοδος Ν φορές, κλιμακώνοντας γεωμετρικά κάθε φορά τις παραμέτρους με μία παραμέτρο κλίμακας $s$. Δηλαδή, η επεξεργασία θα γίνεται με τις παραμέτρους:
+
+ \begin{equation}
+    \begin{gathered}
+        \sigma_0, \sigma_1, ..., \sigma_{N-1} = s^{0}\sigma_0, s^{1}\sigma_0, ..., \sigma^{N-1}\sigma_0 \\
+        \rho_0, \rho_1, ..., \rho_{N-1} = s^{0}\rho_0, s^{1}\rho_0, ..., \rho^{N-1}\rho_0 
+    \end{gathered}
+\end{equation}
+
+Λόγω των πολλαπλών κλιμάκων, θα επιλεχθούν πολλά σημεία τα οποία έχουν την ίδια πιθανότητα σφάλματος όπως προηγουμένως. Για αυτόν τον λόγο, επιλέγονται τελικά αυτά τα σημεία-γωνίες τα οποία μεγιστοποιούν κάποιο κριτήριο σε μία περιοχή κλιμάκων. Εν προκειμένω, το κριτήριο επιλέγεται να είναι η κανονικοποιημένη Λαπλασιανή της Γκαουσιανής.
+
+\begin{equation}
+    \left| LoG(x, y, \sigma_i) \right| = \sigma_i^2 \left|L_xx(x,y, \sigma_i) + L_yy(x, y, \sigma_i) \right|
+\end{equation}
+
+Ουσιαστικά, το σκεπτικό είναι ότι μία γωνία οφείλει να εντοπίζεται τουλάχιστον σε μία μικρή περιοχή κλιμάκων, όχι μόνο σε μία διακεκριμένη κλίμακα. Το αποτέλεσμα της πολυκλιμακωτής μεθόδου στην ίδια εικόνα φαίνεται παρακάτω:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{image-plots/corner-detection-multiscale.jpg}
+    \caption{Πολυκλιμακωτή ανίχνευση γωνιών στην εικόνα \eng{Kyoto}}
+    \label{fig:kyoto-corners-multiscale}
+\end{figure}
+\FloatBarrier
+
+Παρατηρείται, ότι εντοπίζονται λιγότερες γωνίες απ'ό,τι προηγουμένως. Επιθεωρώντας την εικόνα, παρατηρείται ότι έπαψαν να εντοπίζονται κάποιες ψεύτικες γωνίες, κυρίως αυτές στα ψιλά κλαδιά του δέντρου, παρασέρνοντας όμως και λίγες πραγματικές, όπως αυτές στον πύργο. Ωστόσο, εξακολουθούν να εντοπίζονται εν πολλοίς οι πραγματικές γωνίες, και μάλιστα με μεγαλύτερη βεβαιότητα, αφού περικλείονται από κύκλους διαφόρων κλιμάκων. Συμπερασματικά, η μέθοδος αυτή είναι σαφώς βελτίωση της προηγούμενης, με αντίτιμο μεγαλύτερη υπολογιστική πολυπλοκότητα.
+
 
 \subsection{Ανίχνευση \eng{Blobs}}
 

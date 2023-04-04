@@ -4,6 +4,7 @@ from intro_utils import myfilter
 from intro_utils import smooth_gradient
 from intro_utils import InterestPointCoord
 from intro_utils import LogMetric
+import matplotlib.pyplot as plt
 
 def CornerDetection(image, sigma, rho, theta, k):
     # Keep in mind that the image is smoothed
@@ -22,6 +23,15 @@ def CornerDetection(image, sigma, rho, theta, k):
     temp = j1 + j3 
     lplus = 1/2*(temp + np.sqrt( (j1 - j3)**2 + 4*j2**2))
     lminus = temp - lplus 
+
+    fig, axs = plt.subplots(1,2)
+    axs[0].imshow(lminus, cmap='gray')
+    axs[0].set_title("l- eigenvalue")
+    axs[1].imshow(lplus, cmap='gray')
+    axs[1].set_title("l+ eigenvalue")
+    plt.show(block=False)
+    plt.pause(0.01)
+    plt.savefig("image-plots/corner-detection-eigenvalues.jpg")
 
     # calculate the cornerness criterion
     r = lplus * lminus - k*((lplus + lminus)**2)
