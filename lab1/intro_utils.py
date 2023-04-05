@@ -87,7 +87,7 @@ def LogMetric(logs, itemsperscale, N):
     for index, items in enumerate(itemsperscale):
         logp = logs[max(index-1,0)]
         logc = logs[index]
-        logn = logs[min(index+1,N-1)] 
+        logn = logs[min(index+1,N-1)]
         for triplet in items:
             x = int(triplet[1])
             y = int(triplet[0])

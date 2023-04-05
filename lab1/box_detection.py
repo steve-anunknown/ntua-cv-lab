@@ -27,10 +27,10 @@ def boxtest():
     plt.savefig(f"image-plots/blob-detection-ii-up.jpg")
 
     # play around with the parameters
-    sigma = 2.5
-    theta = 0.6
+    sigma = 2.1
+    theta = 0.05
     scale = 1.1
-    N = 8
+    N = 6
 
     blobs = BoxLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(up, blobs, None)
@@ -42,18 +42,18 @@ def boxtest():
     gray = gray.astype(np.float64)/gray.max()
 
     # play around with the parameters
-    sigma = 3
-    theta = 0.025
+    sigma = 6
+    theta = 0.05
 
     blobs = BoxFilters(gray, sigma, theta)
     interest_points_visualization(cells, blobs, None)
     plt.savefig(f"image-plots/blob-detection-multiscale-ii-cells.jpg")
     
     # play around with the parameters
-    sigma = 3
-    theta = 0.1
+    sigma = 4
+    theta = 0.05
     scale = 1.1
-    N = 8
+    N = 6
 
     blobs = BoxLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(cells, blobs, None)
