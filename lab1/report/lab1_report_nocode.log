@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.24)  5 APR 2023 21:17
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.24)  6 APR 2023 20:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -557,18 +557,6 @@ LaTeX Warning: Label `fig:cells-multiscale-ii' multiply defined.
 
 LaTeX Warning: Label `sub@fig:cells-multiscale-ii' multiply defined.
 
-
-LaTeX Warning: Label `fig:cells-multiscale-ii' multiply defined.
-
-
-LaTeX Warning: Label `sub@fig:cells-multiscale-ii' multiply defined.
-
-
-LaTeX Warning: Label `fig:cells-multiscale-ii' multiply defined.
-
-
-LaTeX Warning: Label `sub@fig:cells-multiscale-ii' multiply defined.
-
 )
 \openout1 = `lab1_report_nocode.aux'.
 
@@ -617,208 +605,238 @@ LaTeX Font Info:    Trying to load font information for LGR+cmtt on input line
 
 (/usr/share/texlive/texmf-dist/tex/latex/cbfonts-fd/lgrcmtt.fd
 File: lgrcmtt.fd 2017/07/29 v1.2 Greek European Computer Typewriter
-)
-Overfull \hbox (14.14018pt too wide) in paragraph at lines 36--37
+) [1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./lab1_report_nocode.toc)
+\tf@toc=\write3
+\openout3 = `lab1_report_nocode.toc'.
+
+ [2]
+Overfull \hbox (14.14018pt too wide) in paragraph at lines 40--41
 \LGR/cmr/m/n/10 Oi ei-kìnec ei-sìdou dh-miour-go-Ôntai dia-bˆzo-ntac thn de-do-
 mènh ei-kìna ''[]\OT1/cmr/m/n/10 edgetest[]23.png[]\LGR/cmr/m/n/10 ``
  []
 
-[1
-
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (3.9925pt too wide) in paragraph at lines 92--92
+[3]
+Overfull \hbox (3.9925pt too wide) in paragraph at lines 96--96
 []\LGR/cmr/bx/n/12 Axiolìghsh twn A-po-te-le-smˆtwn A-nÐsqneu-shc Ak-
  []
 
 
-Overfull \hbox (13.00157pt too wide) in paragraph at lines 112--113
+Overfull \hbox (13.00157pt too wide) in paragraph at lines 116--117
 \LGR/cmr/m/n/10 ParatÐjentai ta a-po-te-lèsma-ta e-far-mo-g c thc me-jìdou sthn
  ei-kìnac []\OT1/cmr/m/n/10 ed-getest[]23.png[]\LGR/cmr/m/n/10 . 
  []
 
-<image-plots/edgetest_23.png, id=21, 513.92pt x 513.92pt>
-File: image-plots/edgetest_23.png Graphic file (type png)
-<use image-plots/edgetest_23.png>
-Package pdftex.def Info: image-plots/edgetest_23.png  used on input line 116.
+<../image-plots/edgetest_23.png, id=27, 513.92pt x 513.92pt>
+File: ../image-plots/edgetest_23.png Graphic file (type png)
+<use ../image-plots/edgetest_23.png>
+Package pdftex.def Info: ../image-plots/edgetest_23.png  used on input line 120
+.
 (pdftex.def)             Requested size: 172.5pt x 172.50342pt.
-[2]
-<image-plots/edges-intro0.jpg, id=25, 462.528pt x 346.896pt>
-File: image-plots/edges-intro0.jpg Graphic file (type jpg)
-<use image-plots/edges-intro0.jpg>
-Package pdftex.def Info: image-plots/edges-intro0.jpg  used on input line 122.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<../image-plots/edges-intro0.jpg, id=28, 462.528pt x 346.896pt>
+File: ../image-plots/edges-intro0.jpg Graphic file (type jpg)
+<use ../image-plots/edges-intro0.jpg>
+Package pdftex.def Info: ../image-plots/edges-intro0.jpg  used on input line 12
+6.
 (pdftex.def)             Requested size: 345.0pt x 258.76335pt.
- [3 <./image-plots/edgetest_23.png> <./image-plots/edges-intro0.jpg>]
-File: image-plots/edges-intro0.jpg Graphic file (type jpg)
-<use image-plots/edges-intro0.jpg>
-Package pdftex.def Info: image-plots/edges-intro0.jpg  used on input line 140.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[4] [5 <../image-plots/edgetest_23.png> <../image-plots/edges-intro0.jpg>]
+File: ../image-plots/edges-intro0.jpg Graphic file (type jpg)
+<use ../image-plots/edges-intro0.jpg>
+Package pdftex.def Info: ../image-plots/edges-intro0.jpg  used on input line 14
+4.
 (pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-<image-plots/kyoto_edges.jpg, id=30, 803.0pt x 536.0025pt>
-File: image-plots/kyoto_edges.jpg Graphic file (type jpg)
-<use image-plots/kyoto_edges.jpg>
-Package pdftex.def Info: image-plots/kyoto_edges.jpg  used on input line 172.
+<../image-plots/kyoto_edges.jpg, id=36, 803.0pt x 536.0025pt>
+File: ../image-plots/kyoto_edges.jpg Graphic file (type jpg)
+<use ../image-plots/kyoto_edges.jpg>
+Package pdftex.def Info: ../image-plots/kyoto_edges.jpg  used on input line 176
+.
 (pdftex.def)             Requested size: 172.5pt x 115.14014pt.
 
-[4]
-<image-plots/edges-real.jpg, id=35, 462.528pt x 346.896pt>
-File: image-plots/edges-real.jpg Graphic file (type jpg)
-<use image-plots/edges-real.jpg>
-Package pdftex.def Info: image-plots/edges-real.jpg  used on input line 178.
+[6]
+<../image-plots/edges-real.jpg, id=41, 462.528pt x 346.896pt>
+File: ../image-plots/edges-real.jpg Graphic file (type jpg)
+<use ../image-plots/edges-real.jpg>
+Package pdftex.def Info: ../image-plots/edges-real.jpg  used on input line 182.
+
 (pdftex.def)             Requested size: 310.4979pt x 232.8849pt.
- [5 <./image-plots/kyoto_edges.jpg> <./image-plots/edges-real.jpg>]
-<image-plots/corner-detection-eigenvalues-scaled.jpg, id=39, 583.17876pt x 233.
-87375pt>
-File: image-plots/corner-detection-eigenvalues-scaled.jpg Graphic file (type jp
-g)
-<use image-plots/corner-detection-eigenvalues-scaled.jpg>
-Package pdftex.def Info: image-plots/corner-detection-eigenvalues-scaled.jpg  u
-sed on input line 226.
+ [7 <../image-plots/kyoto_edges.jpg> <../image-plots/edges-real.jpg>]
+<../image-plots/corner-detection-eigenvalues-scaled.jpg, id=46, 583.17876pt x 2
+33.87375pt>
+File: ../image-plots/corner-detection-eigenvalues-scaled.jpg Graphic file (type
+ jpg)
+<use ../image-plots/corner-detection-eigenvalues-scaled.jpg>
+Package pdftex.def Info: ../image-plots/corner-detection-eigenvalues-scaled.jpg
+  used on input line 230.
 (pdftex.def)             Requested size: 345.0pt x 138.35901pt.
- [6 <./image-plots/corner-detection-eigenvalues-scaled.jpg>]
-<image-plots/corner-detection.jpg, id=44, 462.528pt x 346.896pt>
-File: image-plots/corner-detection.jpg Graphic file (type jpg)
-<use image-plots/corner-detection.jpg>
-Package pdftex.def Info: image-plots/corner-detection.jpg  used on input line 2
-53.
+
+[8 <../image-plots/corner-detection-eigenvalues-scaled.jpg>]
+<../image-plots/corner-detection.jpg, id=51, 462.528pt x 346.896pt>
+File: ../image-plots/corner-detection.jpg Graphic file (type jpg)
+<use ../image-plots/corner-detection.jpg>
+Package pdftex.def Info: ../image-plots/corner-detection.jpg  used on input lin
+e 257.
 (pdftex.def)             Requested size: 345.0pt x 258.76335pt.
- [7 <./image-plots/corner-detection.jpg>]
-<image-plots/corner-detection-multiscale.jpg, id=49, 462.528pt x 346.896pt>
-File: image-plots/corner-detection-multiscale.jpg Graphic file (type jpg)
-<use image-plots/corner-detection-multiscale.jpg>
-Package pdftex.def Info: image-plots/corner-detection-multiscale.jpg  used on i
-nput line 282.
+ [9 <../image-plots/corner-detection.jpg>]
+<../image-plots/corner-detection-multiscale.jpg, id=55, 462.528pt x 346.896pt>
+File: ../image-plots/corner-detection-multiscale.jpg Graphic file (type jpg)
+<use ../image-plots/corner-detection-multiscale.jpg>
+Package pdftex.def Info: ../image-plots/corner-detection-multiscale.jpg  used o
+n input line 286.
 (pdftex.def)             Requested size: 345.0pt x 258.76335pt.
- [8 <./image-plots/corner-detection-multiscale.jpg>]
-<image-plots/up.png, id=53, 999.735pt x 563.10374pt>
-File: image-plots/up.png Graphic file (type png)
-<use image-plots/up.png>
-Package pdftex.def Info: image-plots/up.png  used on input line 316.
+ [10 <../image-plots/corner-detection-multiscale.jpg>]
+<../image-plots/up.png, id=59, 999.735pt x 563.10374pt>
+File: ../image-plots/up.png Graphic file (type png)
+<use ../image-plots/up.png>
+Package pdftex.def Info: ../image-plots/up.png  used on input line 320.
 (pdftex.def)             Requested size: 172.5pt x 97.16127pt.
-<image-plots/cells.jpg, id=55, 242.9075pt x 208.78pt>
-File: image-plots/cells.jpg Graphic file (type jpg)
-<use image-plots/cells.jpg>
-Package pdftex.def Info: image-plots/cells.jpg  used on input line 322.
+<../image-plots/cells.jpg, id=61, 242.9075pt x 208.78pt>
+File: ../image-plots/cells.jpg Graphic file (type jpg)
+<use ../image-plots/cells.jpg>
+Package pdftex.def Info: ../image-plots/cells.jpg  used on input line 326.
 (pdftex.def)             Requested size: 138.00052pt x 118.6108pt.
 
-Overfull \hbox (2.22168pt too wide) in paragraph at lines 314--326
+Overfull \hbox (2.22168pt too wide) in paragraph at lines 318--330
 []$[]$ $[]$ 
  []
 
-[9 <./image-plots/up.png> <./image-plots/cells.jpg>]
-<image-plots/blob-detection-up-scaled.jpg, id=63, 545.03625pt x 303.1325pt>
-File: image-plots/blob-detection-up-scaled.jpg Graphic file (type jpg)
-<use image-plots/blob-detection-up-scaled.jpg>
-Package pdftex.def Info: image-plots/blob-detection-up-scaled.jpg  used on inpu
-t line 334.
+[11 <../image-plots/up.png> <../image-plots/cells.jpg>]
+<../image-plots/blob-detection-up-scaled.jpg, id=69, 545.03625pt x 303.1325pt>
+File: ../image-plots/blob-detection-up-scaled.jpg Graphic file (type jpg)
+<use ../image-plots/blob-detection-up-scaled.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-up-scaled.jpg  used on i
+nput line 338.
 (pdftex.def)             Requested size: 345.0pt x 191.87643pt.
-<image-plots/blob-detection-cells-bad-scaled.jpg, id=64, 515.9275pt x 412.54124
-pt>
-File: image-plots/blob-detection-cells-bad-scaled.jpg Graphic file (type jpg)
-<use image-plots/blob-detection-cells-bad-scaled.jpg>
-Package pdftex.def Info: image-plots/blob-detection-cells-bad-scaled.jpg  used 
-on input line 350.
-(pdftex.def)             Requested size: 169.0519pt x 135.17592pt.
-<image-plots/blob-detection-cells-good-scaled.jpg, id=65, 514.92375pt x 411.537
-5pt>
-File: image-plots/blob-detection-cells-good-scaled.jpg Graphic file (type jpg)
-<use image-plots/blob-detection-cells-good-scaled.jpg>
-Package pdftex.def Info: image-plots/blob-detection-cells-good-scaled.jpg  used
- on input line 356.
-(pdftex.def)             Requested size: 169.0519pt x 135.10448pt.
- [10 <./image-plots/blob-detection-up-scaled.jpg> <./image-plots/blob-detection
--cells-bad-scaled.jpg> <./image-plots/blob-detection-cells-good-scaled.jpg>]
-<image-plots/cells-gray-scaled.jpg, id=69, 500.87125pt x 400.49625pt>
-File: image-plots/cells-gray-scaled.jpg Graphic file (type jpg)
-<use image-plots/cells-gray-scaled.jpg>
-Package pdftex.def Info: image-plots/cells-gray-scaled.jpg  used on input line 
-367.
-(pdftex.def)             Requested size: 276.00105pt x 220.70139pt.
-<image-plots/blob-detection-multiscale-cells-bad.jpg, id=70, 462.528pt x 346.89
-6pt>
-File: image-plots/blob-detection-multiscale-cells-bad.jpg Graphic file (type jp
-g)
-<use image-plots/blob-detection-multiscale-cells-bad.jpg>
-Package pdftex.def Info: image-plots/blob-detection-multiscale-cells-bad.jpg  u
-sed on input line 385.
-(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-<image-plots/blob-detection-multiscale-cells-good.jpg, id=71, 462.528pt x 346.8
-96pt>
-File: image-plots/blob-detection-multiscale-cells-good.jpg Graphic file (type j
-pg)
-<use image-plots/blob-detection-multiscale-cells-good.jpg>
-Package pdftex.def Info: image-plots/blob-detection-multiscale-cells-good.jpg  
-used on input line 391.
-(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-
-
-LaTeX Warning: Float too large for page by 24.5267pt on input line 396.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[11 <./image-plots/cells-gray-scaled.jpg>] [12 <./image-plots/blob-detection-mu
-ltiscale-cells-bad.jpg> <./image-plots/blob-detection-multiscale-cells-good.jpg
->]
-<image-plots/blob-detection-ii-up.jpg, id=78, 462.528pt x 346.896pt>
-File: image-plots/blob-detection-ii-up.jpg Graphic file (type jpg)
-<use image-plots/blob-detection-ii-up.jpg>
-Package pdftex.def Info: image-plots/blob-detection-ii-up.jpg  used on input li
-ne 406.
-(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-<image-plots/blob-detection-ii-cells.jpg, id=79, 462.528pt x 346.896pt>
-File: image-plots/blob-detection-ii-cells.jpg Graphic file (type jpg)
-<use image-plots/blob-detection-ii-cells.jpg>
-Package pdftex.def Info: image-plots/blob-detection-ii-cells.jpg  used on input
- line 411.
-(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-
-
-LaTeX Warning: Float too large for page by 24.5267pt on input line 416.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[13
-
-] [14 <./image-plots/blob-detection-ii-up.jpg> <./image-plots/blob-detection-ii
--cells.jpg>]
-<image-plots/blob-detection-multiscale-ii-up.jpg, id=87, 462.528pt x 346.896pt>
-
-File: image-plots/blob-detection-multiscale-ii-up.jpg Graphic file (type jpg)
-<use image-plots/blob-detection-multiscale-ii-up.jpg>
-Package pdftex.def Info: image-plots/blob-detection-multiscale-ii-up.jpg  used 
-on input line 424.
-(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-<image-plots/blob-detection-multiscale-ii-cells.jpg, id=88, 462.528pt x 346.896
-pt>
-File: image-plots/blob-detection-multiscale-ii-cells.jpg Graphic file (type jpg
+<../image-plots/blob-detection-cells-bad-scaled.jpg, id=70, 515.9275pt x 412.54
+124pt>
+File: ../image-plots/blob-detection-cells-bad-scaled.jpg Graphic file (type jpg
 )
-<use image-plots/blob-detection-multiscale-ii-cells.jpg>
-Package pdftex.def Info: image-plots/blob-detection-multiscale-ii-cells.jpg  us
-ed on input line 429.
+<use ../image-plots/blob-detection-cells-bad-scaled.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-cells-bad-scaled.jpg  us
+ed on input line 354.
+(pdftex.def)             Requested size: 169.0519pt x 135.17592pt.
+<../image-plots/blob-detection-cells-good-scaled.jpg, id=71, 514.92375pt x 411.
+5375pt>
+File: ../image-plots/blob-detection-cells-good-scaled.jpg Graphic file (type jp
+g)
+<use ../image-plots/blob-detection-cells-good-scaled.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-cells-good-scaled.jpg  u
+sed on input line 360.
+(pdftex.def)             Requested size: 169.0519pt x 135.10448pt.
+ [12 <../image-plots/blob-detection-up-scaled.jpg> <../image-plots/blob-detecti
+on-cells-bad-scaled.jpg> <../image-plots/blob-detection-cells-good-scaled.jpg>]
+<../image-plots/cells-gray-scaled.jpg, id=75, 500.87125pt x 400.49625pt>
+File: ../image-plots/cells-gray-scaled.jpg Graphic file (type jpg)
+<use ../image-plots/cells-gray-scaled.jpg>
+Package pdftex.def Info: ../image-plots/cells-gray-scaled.jpg  used on input li
+ne 371.
+(pdftex.def)             Requested size: 276.00105pt x 220.70139pt.
+<../image-plots/blob-detection-multiscale-up.jpg, id=76, 462.528pt x 346.896pt>
+
+File: ../image-plots/blob-detection-multiscale-up.jpg Graphic file (type jpg)
+<use ../image-plots/blob-detection-multiscale-up.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-multiscale-up.jpg  used 
+on input line 386.
 (pdftex.def)             Requested size: 345.0pt x 258.76335pt.
-
-
-LaTeX Warning: Float too large for page by 36.5267pt on input line 434.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[15
+[13 <../image-plots/cells-gray-scaled.jpg>]
+<../image-plots/blob-detection-multiscale-cells-bad.jpg, id=81, 462.528pt x 346
+.896pt>
+File: ../image-plots/blob-detection-multiscale-cells-bad.jpg Graphic file (type
+ jpg)
+<use ../image-plots/blob-detection-multiscale-cells-bad.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-multiscale-cells-bad.jpg
+  used on input line 400.
+(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
+<../image-plots/blob-detection-multiscale-cells-good.jpg, id=82, 462.528pt x 34
+6.896pt>
+File: ../image-plots/blob-detection-multiscale-cells-good.jpg Graphic file (typ
+e jpg)
+<use ../image-plots/blob-detection-multiscale-cells-good.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-multiscale-cells-good.jp
+g  used on input line 406.
+(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
 
-] [16 <./image-plots/blob-detection-multiscale-ii-up.jpg> <./image-plots/blob-d
-etection-multiscale-ii-cells.jpg>] (./lab1_report_nocode.aux)
+
+LaTeX Warning: Float too large for page by 24.5267pt on input line 412.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[14 <../image-plots/blob-detection-multiscale-up.jpg>] [15 <../image-plots/blob
+-detection-multiscale-cells-bad.jpg> <../image-plots/blob-detection-multiscale-
+cells-good.jpg>]
+<../image-plots/blob-detection-ii-up.jpg, id=89, 462.528pt x 346.896pt>
+File: ../image-plots/blob-detection-ii-up.jpg Graphic file (type jpg)
+<use ../image-plots/blob-detection-ii-up.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-ii-up.jpg  used on input
+ line 430.
+(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
+<../image-plots/blob-detection-ii-cells.jpg, id=90, 462.528pt x 346.896pt>
+File: ../image-plots/blob-detection-ii-cells.jpg Graphic file (type jpg)
+<use ../image-plots/blob-detection-ii-cells.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-ii-cells.jpg  used on in
+put line 435.
+(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
+
+
+LaTeX Warning: Float too large for page by 24.5267pt on input line 441.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[16
+
+] [17 <../image-plots/blob-detection-ii-up.jpg> <../image-plots/blob-detection-
+ii-cells.jpg>]
+<../image-plots/blob-detection-multiscale-ii-up-scaled.jpg, id=101, 543.02875pt
+ x 311.1625pt>
+File: ../image-plots/blob-detection-multiscale-ii-up-scaled.jpg Graphic file (t
+ype jpg)
+<use ../image-plots/blob-detection-multiscale-ii-up-scaled.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-multiscale-ii-up-scaled.
+jpg  used on input line 451.
+(pdftex.def)             Requested size: 241.49895pt x 138.38379pt.
+<../image-plots/blob-detection-multiscale-ii-cells-scaled.jpg, id=102, 490.8337
+6pt x 414.54875pt>
+File: ../image-plots/blob-detection-multiscale-ii-cells-scaled.jpg Graphic file
+ (type jpg)
+<use ../image-plots/blob-detection-multiscale-ii-cells-scaled.jpg>
+Package pdftex.def Info: ../image-plots/blob-detection-multiscale-ii-cells-scal
+ed.jpg  used on input line 456.
+(pdftex.def)             Requested size: 241.49895pt x 203.96562pt.
+ [18
+
+ <../image-plots/blob-detection-multiscale-ii-up-scaled.jpg> <../image-plots/bl
+ob-detection-multiscale-ii-cells-scaled.jpg>]
+<../image-plots/grad-comparison.png, id=106, 462.528pt x 346.896pt>
+File: ../image-plots/grad-comparison.png Graphic file (type png)
+<use ../image-plots/grad-comparison.png>
+Package pdftex.def Info: ../image-plots/grad-comparison.png  used on input line
+ 474.
+(pdftex.def)             Requested size: 345.0pt x 258.76335pt.
+ [19 <../image-plots/grad-comparison.png>] (./lab1_report_nocode.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 5744 strings out of 480171
- 100475 string characters out of 5894489
+ 5779 strings out of 480171
+ 101842 string characters out of 5894489
  391367 words of memory out of 5000000
- 23632 multiletter control sequences out of 15000+600000
- 480083 words of font info for 54 fonts, out of 8000000 for 9000
+ 23659 multiletter control sequences out of 15000+600000
+ 482162 words of font info for 57 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
- 67i,11n,77p,1473b,560s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 67i,11n,77p,2142b,560s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texl
@@ -828,20 +846,23 @@ t/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts
 /type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/
 public/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/a
 msfonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmr9.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy1
-0.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><
-/usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts/grmn0900.pfb></usr/sha
-re/texlive/texmf-dist/fonts/type1/public/cbfonts/grmn1000.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/public/cbfonts/grmn1200.pfb></usr/share/texlive/texmf
--dist/fonts/type1/public/cbfonts/grmn1728.pfb></usr/share/texlive/texmf-dist/fo
-nts/type1/public/cbfonts/grxn1000.pfb></usr/share/texlive/texmf-dist/fonts/type
-1/public/cbfonts/grxn1200.pfb></usr/share/texlive/texmf-dist/fonts/type1/public
-/cbfonts/grxn1440.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts
-/gttn1200.pfb>
-Output written on lab1_report_nocode.pdf (16 pages, 2070665 bytes).
+cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.
+pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/sha
+re/texlive/texmf-dist/fonts/type1/public/cbfonts/grmn0600.pfb></usr/share/texli
+ve/texmf-dist/fonts/type1/public/cbfonts/grmn0700.pfb></usr/share/texlive/texmf
+-dist/fonts/type1/public/cbfonts/grmn0800.pfb></usr/share/texlive/texmf-dist/fo
+nts/type1/public/cbfonts/grmn0900.pfb></usr/share/texlive/texmf-dist/fonts/type
+1/public/cbfonts/grmn1000.pfb></usr/share/texlive/texmf-dist/fonts/type1/public
+/cbfonts/grmn1200.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts
+/grmn1728.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts/grxn100
+0.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts/grxn1200.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts/grxn1440.pfb></usr/shar
+e/texlive/texmf-dist/fonts/type1/public/cbfonts/gttn1200.pfb>
+Output written on lab1_report_nocode.pdf (19 pages, 2233397 bytes).
 PDF statistics:
- 178 PDF objects out of 1000 (max. 8388607)
- 98 compressed objects within 1 object stream
+ 212 PDF objects out of 1000 (max. 8388607)
+ 117 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
- 96 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 106 words of extra memory for PDF output out of 10000 (max. 10000000)
 
