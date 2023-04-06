@@ -32,6 +32,8 @@ def myfilter(sigma, method):
         [0,1,0]])
     # perform the convolution between the gaussian kernel
     # and the laplacian, in order to create the log kernel
+    # for sake of demonstration, we use our own convolution
+    # but later on we use the cv2 implementation.
     logkernel = my2dconv(gauss2D, laplacian)
     return logkernel
 
@@ -46,15 +48,16 @@ def smooth_gradient(image, sigma, deg):
         return (gradx, grady)
     elif (deg==2):
         gradxx, gradxy = np.gradient(gradx)
-        gradxy, gradyy = np.gradient(grady)
+        _ , gradyy = np.gradient(grady)
         return (gradxx, gradxy, gradyy)
     elif (deg==3):
         gradxx, gradxy = np.gradient(gradx)
-        gradxy, gradyy = np.gradient(grady)
+        _ , gradyy = np.gradient(grady)
         return (gradx, grady, gradxx, gradxy, gradyy)
-    print("deg = 1 for (gradx, grady)\ndeg = 2 for (gradxx, gradxy, gradyy)\ndeg = 3 for (gradx, grady, gradxx, gradxy, gradyy)")
+    print("deg = 1 for (gradx, grady)")
+    print("deg = 2 for (gradxx, gradxy, gradyy)")
+    print("deg = 3 for (gradx, grady, gradxx, gradxy, gradyy)")
     exit(2)
-
 
 def InterestPointCoord(r, sigma, theta):
     # r is a previously evaluated criterion

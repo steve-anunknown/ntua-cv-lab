@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from intro_utils import LogMetric
 from intro_utils import InterestPointCoord
 
@@ -42,7 +43,7 @@ def BoxDerivative(image, sigma):
     height = int(4*np.floor(n/6) + 1)
     width = int(2*np.floor(n/6) + 1)
     padding = 2 * width
-    
+
     padded = np.pad(image, padding, 'reflect')
     ii = IntegralImage(padded)
 

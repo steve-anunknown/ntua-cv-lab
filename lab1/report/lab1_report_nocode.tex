@@ -38,7 +38,7 @@
 \begin{equation}
     \begin{gathered}
         PSNR = 20\log_{10} \left(\frac{I_{max}-I_{min}}{\sigma_n} \right)(dB),\\
-        I_{max} = \underset{x,y} {max} I(x,y), I_{min} = \underset{x,y} {min} I(x,y)
+        I_{max} = \underset{x,y} {\max} I(x,y), I_{min} = \underset{x,y} {\min} I(x,y)
     \end{gathered}
 \end{equation}
 
@@ -113,13 +113,13 @@
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{image-plots/edgetest_23.png}
+    \includegraphics[width=0.5\textwidth]{../image-plots/edgetest_23.png}
     \caption{Η δεδομένη εικόνα εισόδου}
     \label{fig:edge-test}
 \end{figure}
 
 \begin{figure}[h!]
-    \includegraphics[width=\textwidth]{image-plots/edges-intro0.jpg}
+    \includegraphics[width=\textwidth]{../image-plots/edges-intro0.jpg}
     \caption{Θόρυβος \eng{PSNR} 10\eng{dB}}
     \label{fig:noise 10db}
 \end{figure}
@@ -137,7 +137,7 @@
 Ενώ όταν η εικόνα θορυβήθηκε με θόρυβο 20 \eng{dB PSNR}, τα αποτελέσματα ήταν:
 
 \begin{figure}[h]
-        \includegraphics[width=\textwidth]{image-plots/edges-intro0.jpg}
+        \includegraphics[width=\textwidth]{../image-plots/edges-intro0.jpg}
         \caption{Θόρυβος \eng{PSNR} 20\eng{dB}}
 \end{figure}
 \FloatBarrier
@@ -169,13 +169,13 @@
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{image-plots/kyoto_edges.jpg}
+    \includegraphics[width=0.5\textwidth]{../image-plots/kyoto_edges.jpg}
     \caption{Η πραγματική φωτογραφιά του \eng{Kyoto}}
     \label{fig:kyoto}
 \end{figure}
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\textwidth]{image-plots/edges-real.jpg}
+    \includegraphics[width=0.9\textwidth]{../image-plots/edges-real.jpg}
     \caption{Ανίχνευση ακμών στην πραγματική φωτογραφιά του \eng{Kyoto}}
     \label{fig:kyoto-edges}
 \end{figure}
@@ -223,7 +223,7 @@
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{image-plots/corner-detection-eigenvalues-scaled.jpg}
+    \includegraphics[width=\textwidth]{../image-plots/corner-detection-eigenvalues-scaled.jpg}
     \caption{Απεικόνιση των ιδιοτιμών της εικόνας ως γκρίζες εικόνες}
     \label{fig:kyoto-eigenvalues}
 \end{figure}
@@ -250,7 +250,7 @@
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{image-plots/corner-detection.jpg}
+    \includegraphics[width=\textwidth]{../image-plots/corner-detection.jpg}
     \caption{Ανίχνευση γωνιών στην εικόνα \eng{Kyoto}}
     \label{fig:kyoto-corners}
 \end{figure}
@@ -279,7 +279,7 @@
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{image-plots/corner-detection-multiscale.jpg}
+    \includegraphics[width=\textwidth]{../image-plots/corner-detection-multiscale.jpg}
     \caption{Πολυκλιμακωτή ανίχνευση γωνιών στην εικόνα \eng{Kyoto}}
     \label{fig:kyoto-corners-multiscale}
 \end{figure}
@@ -287,15 +287,155 @@
 
 Παρατηρείται, ότι εντοπίζονται λιγότερες γωνίες απ'ό,τι προηγουμένως. Επιθεωρώντας την εικόνα, παρατηρείται ότι έπαψαν να εντοπίζονται κάποιες ψεύτικες γωνίες, κυρίως αυτές στα ψιλά κλαδιά του δέντρου, παρασέρνοντας όμως και λίγες πραγματικές, όπως αυτές στον πύργο. Ωστόσο, εξακολουθούν να εντοπίζονται εν πολλοίς οι πραγματικές γωνίες, και μάλιστα με μεγαλύτερη βεβαιότητα, αφού περικλείονται από κύκλους διαφόρων κλιμάκων. Συμπερασματικά, η μέθοδος αυτή είναι σαφώς βελτίωση της προηγούμενης, με αντίτιμο μεγαλύτερη υπολογιστική πολυπλοκότητα.
 
-
 \subsection{Ανίχνευση \eng{Blobs}}
+
+Η ανίχνευση \eng{blobs} αναφέρεται γενικώς στην ανίχνευση περιοχών με κάποια ομοιογένεια. Οι περιοχές αυτές βρίσκονται χρήσει των μερικών παραγώγων δευτέρας τάξεως της εξομαλυμένης εικόνας. Συγκεκριμένα,  δεδομένου του Χεσιανού πίνακα:
+
+\begin{equation}
+    H(x, y) = \begin{bmatrix} L_{xx}(x, y, \sigma) & L_{xy}(x, y, \sigma) \\
+                L_{xy}(x, y, \sigma) & L_{yy}(x, y, \sigma)\end{bmatrix}
+\end{equation}
+
+Το κριτήριο για τον εντοπισμό περιοχών ομοιογένειας είναι απλώς ο μηδενισμός της ορίζουσας:
+
+\begin{equation}
+    \begin{gathered}
+        R(x, y) = \det\left| H(x, y) \right|\\
+        (x, y) = \underset{x, y} {\arg} \left( R(x, y) = 0 \right)
+    \end{gathered}
+\end{equation}
+
+Επομένως, αναπτύσσεται μεθοδολογία πλήρως ανάλογη με την μεθοδολογία για την ανίχνευση ακμών. Δηλαδή, εξομαλύνεται η εικόνα, υπολογίζεται ο Χεσιανός πίνακας και το κριτήριο $R(x, y)$, εντοπίζονται τα σημεία μηδενισμού και επιλέγονται αυτά τα οποία έχουν τιμή στην εικόνα μεγαλύτερη από κάποιο κατώφλι.
+
+Η μέδοδος εφαρμόζεται στην εικόνα \eng{Up}, από την ομώνυμη ταινία της \eng{Pixar}, και σε μία εικόνα ανθρωπίνων κυττάρων. Πρώτη θα εξεταστεί η εφαρμογή στην εικόνα \eng{Up}.
+
+
+\begin{figure}[h]
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../image-plots/up.png}
+        \caption{Η εικόνα \eng{Up}}
+        \label{fig:up}
+    \end{subfigure}
+    \begin{subfigure}{.5\textwidth}
+        \centering
+        \includegraphics[width=0.8\textwidth]{../image-plots/cells.jpg}
+        \caption{Η εικόνα ανθρωπίνων κυττάρων}
+        \label{fig:up}
+    \end{subfigure}
+    \caption{Οι αρχικές εικόνες για την ανίχνευση \eng{blobs}}
+\end{figure}
+\FloatBarrier
+
+Παρακάτω, στην εικόνα \ref{fig:up-blobs} φαίνονται τα αποτελέσματα για παραμέτρους $\sigma = 2.5, \theta = 0.005$
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{../image-plots/blob-detection-up-scaled.jpg}
+    \caption{Aνίχνευση \eng{blobs} στην εικόνα \eng{Up}}
+    \label{fig:up-blobs}
+\end{figure}
+\FloatBarrier
+
+Παρατηρείται, ότι αν και το κατώφλι για την αποδοχή της περιοχής ομοιογένειας είναι πολύ χαμηλό, τα αποτελέσματα είναι πολύ ικανοποιητικά. Συγκεκριμένα, εντοπίζονται οι περιοχές στα μπαλόνια οι οποίες αντανακλούν το φως του ηλίου και έχουν χαρακτηριστική λευκή λάμψη. Επιπλέον, εντοπίζονται οι περιοχές μεταξύ των μπαλονιών στις οποίες υπάρχει σκοτάδι
+
+Εξετάζεται τώρα η εφαρμογή της μεθόδου στην εικόνα των κυττάρων.
+
+Τα αποτελέσματα για τις ίδιες παραμέτρους με πριν είναι αυτά που φαίνονται στην εικόνα \ref{fig:cells-bad}
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../image-plots/blob-detection-cells-bad-scaled.jpg}
+        \caption{Aνίχνευση \eng{blobs} στην εικόνα ανθρωπίνων κυττάρων χαμηλό κατώφλι}
+        \label{fig:cells-bad}
+    \end{subfigure}
+    \begin{subfigure}{.49\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../image-plots/blob-detection-cells-good-scaled.jpg}
+        \caption{Aνίχνευση \eng{blobs} στην εικόνα ανθρωπίνων κυττάρων υψηλό κατώφλι}
+        \label{fig:cells-good}
+    \end{subfigure}
+\end{figure}
+\FloatBarrier
+
+Παρατηρείται, ότι αν και ανιχνεύονται επιτυχώς μερικές από τις λευκές περιοχές ομοιογένειας, ανιχνεύονται επίσης ανεπιθυμητές περιοχές. Αυτό συμβαίνει, γιατί το περιβάλλον της εικόνας είναι τραχύ, με αποτέλεσμα οποιαδήποτε ομοιογένεια να ξεχωρίζει. Αντιθέτως, ο ουρανός προηγουμένως είναι πολύ ομαλός και ομοιογενής, επομένως δεν ξεχωρίζει. Για αυτόν τον λόγο, προσαρμόζεται η παράμετρος $\theta \leftarrow 0.25$. Τα νέα αποτελέσματα φαίνονται στην εικόνα \ref{fig:cells-good}, όπου πλέον ανιχνεύονται σαφώς λίγοτερες περιοχές ομοιογένειες, αλλά ορθότερες.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../image-plots/cells-gray-scaled.jpg}
+    \caption{Η εικόνα των κυττάρων γκρίζα}
+    \label{fig:cells-gray}
+\end{figure}
+\FloatBarrier
+
+Αξιοσημειώτο είναι το γεγονός ότι οι ερυθρές περιοχές γενικώς δεν ανιχνεύονται, σίγουρα όχι στον ίδιο βαθμό με τις λευκές. Αυτό συμβαίνει γιατί η επεξεργασία γίνεται στην γκρίζα μορφή της εικόνας, επομένως η χρωματική διαφορά απαλείφεται, όπως φαίνεται στην εικόνα \ref{fig:cells-gray}. Εφόσον η υφή είναι η ίδια, ανεξαρτήτως χρώματος, γίνεται σαφές ότι δεν μπορούν να διακριθούν στον ίδιο βαθμό με τις λευκές. Εκτός από αυτό, συμπεραίνεται ότι σε τραχύ περιβάλλον πρέπει να αυξηθεί το κατώφλι αποδοχής σημείων.
 
 \subsection{Πολυκλιμακωτή Ανίχνευση \eng{Blobs}}
 
+Για την βελτίωση της μεθόδου χρησιμοποιούνται τώρα πολλαπλές κλίμακες, σε πλήρη αναλογία με την πολυκλιμακωτή ανίχνευση γωνιών. 
+
+Στην εικόνα \ref{fig:cells-multiscale-bad} φαίνεται το αποτέλεσμα της πολυκλιμακωτής ανίχνευσης \eng{blobs} για τις τιμές παραμέτρων $\sigma = 3, \theta = 0.05, s = 1.1, N = 8$. Η ανίχνευση γίνεται σε 8 κλίμακες του $\sigma = 3 $με παράγοντα το 1.1 και χαμηλό κατώφλι.Αντιστοίχως, στην εικόνα \ref{fig:cells-multiscale-good} φαίνεται το αποτέλεσμα της πολυκλιμακωτής ανίχνευσης \eng{blobs} για τις τιμές παραμέτρων $\sigma = 3, \theta = 0.15, s = 1.1, N = 8$. Δηλαδή, η ανίχνευση γίνεται σε 8 κλίμακες  του $\sigma = 3$ και με υψηλότερο κατώφλι, με παράγοντα το 1.1.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../image-plots/blob-detection-multiscale-cells-bad.jpg}
+    \caption{Χαμηλό κατώφλι}
+    \label{fig:cells-multiscale-bad}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../image-plots/blob-detection-multiscale-cells-good.jpg}
+    \caption{Υψηλό κατώφλι}
+    \label{fig:cells-multiscale-good}
+    \end{subfigure}
+    \caption{Πολυκλιμακωτή ανίχνευση \eng{blobs} σε κύτταρα}
+\end{figure}
+\FloatBarrier
+
 \subsection{Επιτάχυνση Ανίχνευσης \eng{Blobs}}
+
+Η παραπάνω μέθοδος μπορεί να επιταχυνθεί χρήσει ολοκληρωτικών εικόνων και \eng{box filter}. Συγκεκριμένα, ο υπολογισμός των μερικών παραγώγων μέχρι στιγμής απαιτούσε την συνέλιξη φίλτρων με την εκάστοτε εικόνα, γεγονός που τον καθιστούσε υπολογιστικά ακριβό. Οι ολοκληρωτικές εικόνες είναι μία τεχνική η οποία επιτρέπει των υπολογισμό συνελίξεων με την εικόνα σε χρόνο ανεξάρτητο του πυρήνα και εξαρτώμενο μόνο από το μέγεθος της εικόνας. Αυτό συμβαίνει, γιατί, χρήσει ολοκληρωτικών εικόνων, το άθροισμα των \eng{pixels} μίας ορθογώνιας περιοχής μπορεί να υπολογιστεί σε σταθερό χρόνο. Για να επιτευχθεί, όμως, η επιτάχυνση αυτή, χρησιμοποιείται μία προσέγγιση της παραγώγου. Επομένως, πρόκειται για προσεγγιστική μέθοδο και αναμένονται αποκλίσεις από τα προηγούμενα αποτελέσματα.
+
+Σημειώνεται, ότι η διαφορά στην ταχύτητα θα αρχίσει να φαίνεται για μεγάλες τιμές της παραμέτρου $\sigma$. Συγκεκριμένα, για 
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width=\textwidth]{../image-plots/blob-detection-ii-up.jpg}
+        \caption{Αποτέλεσμα στην εικόνα \eng{Up}}
+        \label{fig:cells-multiscale-ii}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width=\textwidth]{../image-plots/blob-detection-ii-cells.jpg}
+        \caption{Αποτέλεσμα στην εικόνα κυττάρων}
+        \label{fig:cells-multiscale-ii}
+    \end{subfigure}
+    \caption{Προσέγγιση ανίχνευσης \eng{blobs} με ολοκληρωτικές εικόνες}
+\end{figure}
+\FloatBarrier
 
 \subsection{Επιτάχυνση Πολυκλιμακωτής Ανίχνευση \eng{Blobs}}
 
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width=\textwidth]{../image-plots/blob-detection-multiscale-ii-up.jpg}
+        \caption{Αποτέλεσμα στην εικόνα \eng{Up}}
+        \label{fig:cells-multiscale-ii}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \includegraphics[width=\textwidth]{../image-plots/blob-detection-multiscale-ii-cells.jpg}
+        \caption{Αποτέλεσμα στην εικόνα κυττάρων}
+        \label{fig:cells-multiscale-ii}
+    \end{subfigure}
+    \caption{Προσέγγιση πολυκλιμακωτής ανίχνευσης \eng{blobs} με ολοκληρωτικές εικόνες}
+\end{figure}
+\FloatBarrier
 
 \end{document}
 

@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from intro_utils import myfilter
+from intro_utils import my2dconv
 
 def EdgeDetect(image, sigma, theta, method):
     if (not (method == "linear" or method == "nonlinear")):
@@ -14,7 +15,8 @@ def EdgeDetect(image, sigma, theta, method):
         # construct the laplacian of gaussian kernel
         # and use it to filter the image
         logfilter = myfilter(sigma, "log")
-        imgloged = cv2.filter2D(image, -1, logfilter)
+        #imgloged = cv2.filter2D(image, -1, logfilter)
+        imgloged = my2dconv(image, logfilter)
     elif (method == "nonlinear"):
         # Perform morphological operations using
         # the cross structuring element

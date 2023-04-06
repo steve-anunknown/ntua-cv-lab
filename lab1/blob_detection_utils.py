@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from intro_utils import smooth_gradient
 from intro_utils import InterestPointCoord
 from intro_utils import LogMetric

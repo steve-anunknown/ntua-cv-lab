@@ -15,7 +15,7 @@ def blobtest():
 
     # play around with the parameters
     sigma = 2.5
-    theta = 0.005
+    theta = 0.05
     scale = 1.1
     N = 8
 
@@ -35,18 +35,33 @@ def blobtest():
 
     # play around with the parameters
     sigma = 3
-    theta = 0.005
+    theta = 0.05
     scale = 1.1
     N = 8
 
     blobs = BlobDetection(gray, sigma, theta)
     interest_points_visualization(cells, blobs, None)
-    plt.savefig(f"image-plots/blob-detection-cells.jpg")
+    plt.savefig(f"image-plots/blob-detection-cells-bad.jpg")
 
     # play around with the parameters
     blobs = HessianLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(cells, blobs, None)
-    plt.savefig(f"image-plots/blob-detection-multiscale-cells.jpg")
+    plt.savefig(f"image-plots/blob-detection-multiscale-cells-bad.jpg")
+
+    # play around with the parameters
+    sigma = 3
+    theta = 0.15
+    scale = 1.1
+    N = 8
+
+    blobs = BlobDetection(gray, sigma, theta)
+    interest_points_visualization(cells, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-cells-good.jpg")
+
+    # play around with the parameters
+    blobs = HessianLaplacian(gray, sigma, theta, scale, N)
+    interest_points_visualization(cells, blobs, None)
+    plt.savefig(f"image-plots/blob-detection-multiscale-cells-good.jpg")
 
 blobtest()
 plt.show()

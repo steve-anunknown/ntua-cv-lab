@@ -5,12 +5,17 @@ from box_detection_utils import BoxFilters
 from box_detection_utils import BoxLaplacian
 from cv23_lab1_part2_utils import interest_points_visualization
 
-# Either the implementation of the function is not good enough
-# or is is good enough but the proposed approximation is bad.
+# THIS WORKS NOW, HOWEVER IT IS NOT SPED UP.
+# THE SPEED UP ACTUALLY DEPENDS ON HOW THE
+# SIMPLE BLOB DETECTION FUNCTION WORKS.
 
-# For the same set of parameters, the blob detection is 
-# accurate but the box filter method detects some non existent
-# blobs. Perhaps it needs a greater theta.
+# IF IT IS IMPLEMENTED USING THE BUILT IN
+# FILTER2D AND GAUSSIAN FUNCTIONS, THEN 
+# IT IS ALREADY REALLY FAST AND ITS TIME
+# COMPLEXITY DOES NOT DEPEND ON THE SIGMA
+# PARAMETER. IF A MANUAL CONVOLUTION HAS
+# BEEN USED, THEN A HUGE SPEEDUP (OR ACTUALLY SLOW DOWN)
+# WILL BE NOTICEABLE.
 
 def boxtest():
     up = cv2.imread("cv23_lab1_part12_material/up.png")
@@ -47,13 +52,13 @@ def boxtest():
 
     blobs = BoxFilters(gray, sigma, theta)
     interest_points_visualization(cells, blobs, None)
-    plt.savefig(f"image-plots/blob-detection-multiscale-ii-cells.jpg")
+    plt.savefig(f"image-plots/blob-detection-ii-cells.jpg")
     
     # play around with the parameters
-    sigma = 4
+    sigma = 3
     theta = 0.05
     scale = 1.1
-    N = 6
+    N = 8
 
     blobs = BoxLaplacian(gray, sigma, theta, scale, N)
     interest_points_visualization(cells, blobs, None)
