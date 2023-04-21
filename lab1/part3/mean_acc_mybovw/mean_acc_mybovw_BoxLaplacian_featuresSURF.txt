@@ -1,1 +1,1 @@
-52.552
+BoxLaplacian featuresSURF: 52.552

@@ -1,1 +1,1 @@
-65.103
+HarrisLaplacian featuresHOG: 65.103

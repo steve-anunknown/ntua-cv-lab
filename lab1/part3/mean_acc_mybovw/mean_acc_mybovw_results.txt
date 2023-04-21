@@ -1,0 +1,11 @@
+BlobDetection featuresHOG: 64.552
+BlobDetection featuresSURF: 54.345
+BoxLaplacian featuresHOG: 62.207
+BoxLaplacian featuresSURF: 52.552
+CornerDetection featuresHOG: 61.379
+CornerDetection featuresSURF: 56.966
+HarrisLaplacian featuresHOG: 65.103
+HarrisLaplacian featuresSURF: 57.793
+HessianLaplacian featuresHOG: 65.517
+HessianLaplacian featuresSURF: 59.586
+
