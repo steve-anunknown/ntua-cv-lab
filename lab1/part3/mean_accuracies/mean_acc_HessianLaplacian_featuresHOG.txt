@@ -1,1 +1,0 @@
-HessianLaplacian featuresHOG: 63.586
