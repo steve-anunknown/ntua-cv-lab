@@ -24,5 +24,18 @@
 \babel@toc {greek}{}\relax 
 \babel@toc {english}{}\relax 
 \babel@toc {greek}{}\relax 
-\contentsline {section}{\numberline {4}Παράρτημα}{21}{}%
-\contentsline {subsection}{\numberline {4.1}Επιτάχυνση χρήσει ολοκληρωτικών εικόνων και \foreignlanguage {english}{box filters}}{21}{}%
+\contentsline {subsection}{\numberline {3.2}Κατηγοριοποίηση Εικόνων}{20}{}%
+\babel@toc {english}{}\relax 
+\babel@toc {greek}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {greek}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {greek}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {greek}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {greek}{}\relax 
+\babel@toc {english}{}\relax 
+\babel@toc {greek}{}\relax 
+\contentsline {section}{\numberline {4}Παράρτημα}{23}{}%
+\contentsline {subsection}{\numberline {4.1}Επιτάχυνση χρήσει ολοκληρωτικών εικόνων και \foreignlanguage {english}{box filters}}{23}{}%
