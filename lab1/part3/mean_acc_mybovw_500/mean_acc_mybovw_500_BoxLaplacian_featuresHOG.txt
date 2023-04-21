@@ -1,1 +1,1 @@
-65.931
+BoxLaplacian featuresHOG: 65.931
