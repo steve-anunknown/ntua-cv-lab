@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.24)  22 APR 2023 17:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.24)  23 APR 2023 14:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -861,7 +861,9 @@ File: "avg_theta_errors.txt"  (verbatim)
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[19] [20]
+[19
+
+] [20]
 File: "../part3/mean_acc_bovw/mean_acc_results_sorted.txt"  (verbatim)
 File: "../part3/mean_acc_mybovw/mean_acc_mybovw_results_sorted.txt"  (verbatim)
 
@@ -872,7 +874,7 @@ erbatim)
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [21]
-Overfull \hbox (13.02214pt too wide) in paragraph at lines 557--568
+Overfull \hbox (13.02214pt too wide) in paragraph at lines 560--571
  [][][] 
  []
 
@@ -881,7 +883,7 @@ Overfull \hbox (13.02214pt too wide) in paragraph at lines 557--568
 File: ../image-plots/grad-comparison.png Graphic file (type png)
 <use ../image-plots/grad-comparison.png>
 Package pdftex.def Info: ../image-plots/grad-comparison.png  used on input line
- 581.
+ 584.
 (pdftex.def)             Requested size: 345.0pt x 258.76335pt.
  [23 <../image-plots/grad-comparison.png>] (./lab1_part123_report.aux)
 
@@ -919,7 +921,7 @@ ts/grmn1200.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts/grmn1
 </usr/share/texlive/texmf-dist/fonts/type1/public/cbfonts/grxn1200.pfb></usr/sh
 are/texlive/texmf-dist/fonts/type1/public/cbfonts/grxn1440.pfb></usr/share/texl
 ive/texmf-dist/fonts/type1/public/cbfonts/gttn1200.pfb>
-Output written on lab1_part123_report.pdf (23 pages, 2263811 bytes).
+Output written on lab1_part123_report.pdf (23 pages, 2263691 bytes).
 PDF statistics:
  229 PDF objects out of 1000 (max. 8388607)
  128 compressed objects within 2 object streams
