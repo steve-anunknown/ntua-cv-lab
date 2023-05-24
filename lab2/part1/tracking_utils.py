@@ -3,6 +3,20 @@ from cv2 import getGaussianKernel, filter2D
 from scipy.ndimage import map_coordinates
 from matplotlib.pyplot import quiver
 
+def shift_image(image, shift):
+    """ Shift the image
+
+    Keyword arguments:
+    image -- image to be shifted
+    shift -- shift amount
+    """
+    x, y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
+    x = x + shift[0]
+    y = y + shift[1]
+    coordinates = np.array([y.ravel(), x.ravel()])
+    shifted_image = map_coordinates(image, coordinates, order=1)
+    return shifted_image.reshape(image.shape)
+
 def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     """ Lucas-Kanade algorithm
     
@@ -17,49 +31,45 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     """
     iterations = 0
     limit = 200
-    change = 0
+    change = ~0 # infinity
     threshold = 0.001
 
     # setup the kernel for the convolutions
+    # this kernel acts as a gaussian filter
     size = int(2*np.ceil(3*rho)+1)
     kernel = getGaussianKernel(size, rho)
     kernel = kernel @ kernel.T
-
-    # compute the intensity
-    x0, y0 = np.meshgrid(i1.shape[1], i1.shape[0])
-    a = map_coordinates(i1, [np.ravel(y0 + dy0), np.ravel(x0 + dx0)], order=1)
-
+    dx = dx0
+    dy = dy0
     for feature in features:
-        while (iterations < limit and change < threshold):
-            iterations += 1
-
-            # compute the gradient
-            x, y = np.meshgrid(feature[0], feature[1])
-            b = map_coordinates(i2, [np.ravel(y + dy0), np.ravel(x + dx0)], order=1)
-            b = b - a
-
-            # compute the jacobian
-            jacobian = np.array([np.ravel(filter2D(i1, -1, kernel, borderType=1)),
-                                 np.ravel(filter2D(i2, -1, kernel, borderType=1))]).T
-
-            # compute the steepest descent
-            steepest_descent = jacobian @ np.array([dx0, dy0])
-
-            # compute the hessian
-            hessian = jacobian.T @ jacobian
-
-            # compute the inverse hessian
-            inverse_hessian = np.linalg.inv(hessian)
-
-            # compute the delta
-            delta = inverse_hessian @ steepest_descent
-
+        # define a small area around the feature
+        x, y = feature
+        x = int(x)
+        y = int(y)
+        cropped1 = i1[x-5:x+5, y-5:y+5]
+        cropped2 = i2[x-5:x+5, y-5:y+5]
+        # iterate until convergence
+        while (iterations < limit and change > threshold):
+            # compute the shifted image of the first frame
+            initial = shift_image(cropped1, [dx, dy])
+            # compute the gradient of the shifted image
+            grady, gradx = np.gradient(initial)
+            # compute the error between the second frame
+            # and the shifted first frame
+            error = cropped2 - initial
+            # setup the matrices to calculate the improvement
+            system = np.array([[filter2D(gradx**2, -1, kernel, borderType=1) + epsilon, filter2D(gradx*grady, -1, kernel, borderType=1)],
+                               [filter2D(gradx*grady, -1, kernel, borderType=1), filter2D(grady**2, -1, kernel, borderType=1) + epsilon]])
+            steps = np.array([filter2D(gradx*error, -1, kernel, borderType=1), filter2D(grady*error, -1, kernel, borderType=1)]).T
+            # calculate the improvement
+            improvement = np.linalg.inverse(system) @ steps
             # update the parameters
-            dx0 += delta[0]
-            dy0 += delta[1]
-
-            # compute the change
-            change = np.linalg.norm(delta)
+            dx += improvement[0]
+            dy += improvement[1]
+            # calculate the change
+            change = np.linalg.norm(improvement)
+            # update the iterations
+            iterations += 1
     
     return np.array([dx0, dy0])
 
