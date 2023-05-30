@@ -45,15 +45,12 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     for index, feature in enumerate(features):
         x, y = feature
         # get area around the feature
-        print(f"feature: {feature}, image shape: {i1.shape}")
         initial_image = i1[max(0, y-mid):min(y+mid, i1.shape[0]),
                            max(0, x-mid):min(x+mid, i1.shape[1])]
         next_image = i2[max(0, y-mid):min(y+mid, i2.shape[0]),
                         max(0, x-mid):min(x+mid, i2.shape[1])]
         # compute the gradient of the initial image
-        print(f"initial image shape: {initial_image.shape}")
         gradient_y, gradient_x = np.gradient(initial_image)
-        print(f"gradient ok with shape {gradient_x.shape}")
 
         iterations = 0
         change = float('inf') # infinity
@@ -84,7 +81,6 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
             change = np.max(np.abs(delta_x)) + np.max(np.abs(delta_y))
             # update the number of iterations
             iterations += 1
-            print(iterations, change)
         # update the displacement estimates
         returnx[index] = dx
         returny[index] = dy
@@ -92,49 +88,13 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
 
     return np.array([returnx, returny])
 
-def displ(dx, dy, method):
+def displ(dx, dy, threshold):
     """ Display the optical flow
     
     Keyword arguments:
     dx -- displacement x axis
     dy -- displacement y axis
-    method -- method to display the optical flow
-
-    returns -- optical flow for visualization
+    threshold -- threshold for the optical flow
     """
-
-    # In order to achieve a better visualization of the
-    # optical flow or to reject outliers, we could implement
-    # different techniques such as:
-    # - Computing the mean value of the displacement vectors
-    #   that have greater energy than a certain threshold.
-
-    if method == "energy":
-        # compute the energy of the optical flow
-        energies = np.array([np.sqrt(x**2 + y**2) for x, y in zip(dx, dy)])
-
-        # compute the mean value of the energy
-        mean_energy = np.mean(energies)
-
-        # compute the threshold
-        threshold = 0.8*mean_energy
-
-        # compute the indices of the optical flow
-        indices = np.where(energies <= threshold)
-        disp_x, disp_y = np.zeros(dx.shape), np.zeros(dy.shape)
-        disp_x[indices], disp_y[indices] = dx[indices], dy[indices]
-        return np.array([np.mean(disp_x), np.mean(disp_y)])
-    elif method == "texture":
-        # It is known that the optical flow vectors
-        # tend to have greatest norm at points that
-        # belong to the areas of high textural information
-        # and low norm at points that belong to the areas
-        # of low textural information and uniform texture.
-        # Therefore, since the majority of interest points
-        # are located in areas of high textural information,
-        # we could simply use the mean value of the displacement
-        # vectors.
-        return np.array([np.mean(dx), np.mean(dy)])
-    else:
-        print("Method has to be either 'energy' or 'texture'.")
-        exit(5)
+    energy = np.array([np.array([dx, dy]) for x, y in zip(dx, dy) if np.sqrt(x**2 + y**2) > threshold])
+    return [np.mean(energy[:,0]), np.mean(energy[:,1])]
