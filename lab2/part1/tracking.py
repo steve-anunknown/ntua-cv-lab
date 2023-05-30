@@ -15,18 +15,18 @@ if __name__ == "__main__":
     skin_samples = cv2.cvtColor(skin_samples, cv2.COLOR_RGB2YCR_CB)
     mu, cov = FitSkinGaussian(skin_samples)
     boundaries = fd(initial, mu, cov)
-    dx0, dy0 = 0, 0
     for i in range(1, 20):
         # load some image from the dataset in
         # the "part1-GreekSignLanguage" folder.
         image1 = cv2.imread(f"part1-GreekSignLanguage/{i}.png")
         image2 = cv2.imread(f"part1-GreekSignLanguage/{i+1}.png")
-
+        gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+        gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
         # convert the image to YCbCr color space
         image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2YCR_CB)
         image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2YCR_CB)
-        gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-        gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+
         for boundary in boundaries:
             x, y, w, h = boundary
             # crop the image to retain only the pixels
@@ -34,15 +34,26 @@ if __name__ == "__main__":
             cropped1 = gray1[x:x+w, y:y+h]
             cropped2 = gray2[x:x+w, y:y+h]
             features = cv2.goodFeaturesToTrack(cropped2, 25, 0.01, 10)
+            # initial estimation of movement
+            # set to zero because we have no estimation
+            dx0, dy0 = np.zeros(len(features)), np.zeros(len(features))
             # use squeeze to remove the redundant dimension
             features = np.squeeze(features.astype(np.int32))
             [dx, dy] = lk(cropped1, cropped2, features, 1, 0.001, dx0, dy0)
-            [nextx, nexty] = displ(dx, dy, "energy")
-            # readjust the boundaries
-            x += nextx
-            y += nexty
+
+
+            [flowx, flowy] = displ(dx, dy, "energy")
+            # update the initial guess
+            dx0 = dx
+            dy0 = dy    
+            # update the boundaries
+            x = round(x + flowx)
+            y = round(y + flowy)
             # show the new boundaries
             cv2.rectangle(image2, (y, x), (y+h, x+w), (0, 0, 255), 2)
+            plt.quiver(-dx, -dy, angles='xy', scale=100)
+
+
         # show the image
         fig, axs = plt.subplots(1, 1)
         axs.imshow(image2)
