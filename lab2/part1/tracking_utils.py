@@ -2,17 +2,6 @@ import numpy as np
 from cv2 import getGaussianKernel, filter2D, goodFeaturesToTrack
 from scipy.ndimage import map_coordinates
 
-def shift_image(image, shift):
-    """ Shift the image
-
-    Keyword arguments:
-    image -- image to be shifted
-    shift -- shift amount
-    """
-    dx, dy = shift
-    x, y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
-    return map_coordinates(image,[np.ravel(y + dy), np.ravel(x + dx)], order=1).reshape(image.shape)
-
 def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     """ Lucas-Kanade algorithm
     
@@ -26,6 +15,19 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     dy0 -- initial guesses for movement of features in y axis
     returns -- [dx, dy] actual estimates for movement of features
     """
+    # first define a helper function that
+    # accomodated the shifting of images
+    def shift_image(image, shift):
+        """ Shift the image
+
+        Keyword arguments:
+        image -- image to be shifted
+        shift -- shift amount
+        """
+        dx, dy = shift
+        x, y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
+        return map_coordinates(image,[np.ravel(y + dy), np.ravel(x + dx)], order=1).reshape(image.shape)
+
     # convert the images to float in [0,1]
     # for the parameters to make sense
     i1 = i1.astype(np.float)/255
