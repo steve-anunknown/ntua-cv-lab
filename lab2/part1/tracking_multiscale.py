@@ -28,7 +28,7 @@ if __name__ == "__main__":
     print(f"right hand: {boundaries[1]}")
     print(f"left hand: {boundaries[2]}")
     dx0, dy0 = np.zeros(feats), np.zeros(feats)
-    for i in range(1, 60):
+    for i in range(1, 69):
         # load some image from the dataset in
         # the "part1-GreekSignLanguage" folder.
         image1 = cv2.imread(f"part1-GreekSignLanguage/{i}.png")
@@ -63,6 +63,7 @@ if __name__ == "__main__":
             cv2.rectangle(image2, (x, y), (x + w, y + h), colours[index], 2)
             
             # plot the flow like a gradient field
+            features = np.squeeze(cv2.goodFeaturesToTrack(cropped2, feats, 0.05, 5).astype(int))
             axs[axindices[index]].quiver(features[:, 0], features[:, 1], -dx, -dy, angles='xy')
             axs[axindices[index]].set_title(f"Optical flow for {names[index]}")
 

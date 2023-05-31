@@ -141,24 +141,18 @@ def multiscale_lk(i1, i2, num_features, rho, epsilon, scale):
     pyramid1 = pyramid(i1, scale)
     pyramid2 = pyramid(i2, scale)
 
-    print(f"length of pyramid is {len(pyramid1)}")
-
     # initialize result vectors.
     dx0, dy0 = np.zeros(num_features), np.zeros(num_features)
     
     for level in range(scale):
-        print(f"shape of pyramid1[{level}] is {pyramid1[level].shape}")
-        print(f"shape of pyramid2[{level}] is {pyramid2[level].shape}")
         features = np.squeeze(goodFeaturesToTrack(pyramid2[level], num_features, 0.05, 5).astype(int))
         
         [dx, dy] = lk(pyramid1[level], pyramid2[level], features, rho, epsilon, dx0, dy0)
         [flowx, flowy] = displ(dx, dy, 0.7)
         # update the initial guesses
         if level < scale - 1:
-            dx0 = np.full(pyramid1[level+1].shape, 2*flowx)
-            dy0 = np.full(pyramid1[level+1].shape, 2*flowy)
-        
-
+            dx0 = np.full((num_features), 2*flowx)
+            dy0 = np.full((num_features), 2*flowy)
 
     return np.array([dx, dy])
 
