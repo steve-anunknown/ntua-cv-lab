@@ -55,8 +55,8 @@ def fd(image, mean, covariance):
         # find the bounding box of the feature
         # and append it to the list of boundaries
         indices = np.where(labels == label)
-        x, y = indices[0], indices[1]
-        boundaries.append((np.min(x), np.min(y), np.max(x)-np.min(x), np.max(y)-np.min(y)))
+        y, x = indices[0], indices[1]
+        boundaries.append((np.min(y), np.min(x), np.max(y)-np.min(y), np.max(x)-np.min(x)))
     return boundaries
 
 
