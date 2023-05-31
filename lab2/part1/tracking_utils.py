@@ -11,6 +11,8 @@ def shift_image(image, shift):
     shift -- shift amount
     """
     dx, dy = shift
+    # perhaps this could also be written in the form
+    # y, x = meshgrid( arange (shape[0]), arange (shape[1]) )
     x, y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
     return map_coordinates(image, [np.ravel(y + dy), np.ravel(x + dx)], order=1).reshape(image.shape)
 
@@ -27,11 +29,13 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     dy0 -- initial guesses for movement of features in y axis
     returns -- [dx, dy] actual estimates for movement of features
     """
+    # convert the images to float in [0,1]
+    # for the parameters to make sense
     i1 = i1.astype(np.float)/255
     i2 = i2.astype(np.float)/255
 
-    limit = 100
-    threshold = 0.01
+    limit = 150
+    threshold = 0.001
     # setup the kernel for the convolutions
     # this kernel acts as a gaussian filter
     size = int(2*np.ceil(3*rho)+1)
@@ -43,6 +47,10 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     returny = np.zeros(len(features))
     
     for index, feature in enumerate(features):
+        # I think that this should be y, x, but 
+        # if this changes to y, x we get an error:
+        # "shape of array too small to calculate numerical gradient"
+        # something is messed up with the order of the coordinates
         x, y = feature
         # get area around the feature
         initial_image = i1[max(0, y-mid):min(y+mid, i1.shape[0]),
@@ -78,7 +86,9 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
             dx += delta_x
             dy += delta_y
             # compute the change
-            change = np.max(np.abs(delta_x)) + np.max(np.abs(delta_y))
+            # change = np.max(np.abs(delta_x)) + np.max(np.abs(delta_y))
+            change = np.linalg.norm([delta_x, delta_y])
+            # change = error[mid, mid]
             # update the number of iterations
             iterations += 1
         # update the displacement estimates
@@ -96,5 +106,11 @@ def displ(dx, dy, threshold):
     dy -- displacement y axis
     threshold -- threshold for the optical flow
     """
-    energy = np.array([np.array([dx, dy]) for x, y in zip(dx, dy) if np.sqrt(x**2 + y**2) > threshold])
+    energies = np.array([x**2 + y**2 for x, y in zip(dx, dy)])
+    mean_energy = np.mean(energies)
+    energy = np.array([np.array([dx, dy])
+                       for x, y in zip(dx, dy)
+                       if (x**2 + y**2) > threshold*mean_energy])
+    if energy.shape[0] == 0:
+        return [0, 0]
     return [np.mean(energy[:,0]), np.mean(energy[:,1])]
