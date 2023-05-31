@@ -11,10 +11,8 @@ def shift_image(image, shift):
     shift -- shift amount
     """
     dx, dy = shift
-    # perhaps this could also be written in the form
-    # y, x = meshgrid( arange (shape[0]), arange (shape[1]) )
     x, y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
-    return map_coordinates(image, [np.ravel(y + dy), np.ravel(x + dx)], order=1).reshape(image.shape)
+    return map_coordinates(image,[np.ravel(y + dy), np.ravel(x + dx)], order=1).reshape(image.shape)
 
 def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     """ Lucas-Kanade algorithm
@@ -33,7 +31,8 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     # for the parameters to make sense
     i1 = i1.astype(np.float)/255
     i2 = i2.astype(np.float)/255
-
+    # define limit of iterations
+    # and threshold of change
     limit = 150
     threshold = 0.001
     # setup the kernel for the convolutions
@@ -43,16 +42,14 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     kernel = getGaussianKernel(size, rho)
     kernel = kernel @ kernel.T
     
+    # initialize result vectors
     returnx = np.zeros(len(features))
     returny = np.zeros(len(features))
     
     for index, feature in enumerate(features):
-        # I think that this should be y, x, but 
-        # if this changes to y, x we get an error:
-        # "shape of array too small to calculate numerical gradient"
-        # something is messed up with the order of the coordinates
+        # get the coordinates of the feature
         x, y = feature
-        # get area around the feature
+        # get area around the feature in both images
         initial_image = i1[max(0, y-mid):min(y+mid, i1.shape[0]),
                            max(0, x-mid):min(x+mid, i1.shape[1])]
         next_image = i2[max(0, y-mid):min(y+mid, i2.shape[0]),
@@ -60,8 +57,9 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
         # compute the gradient of the initial image
         gradient_y, gradient_x = np.gradient(initial_image)
 
+        # initialize iteration counter and change
         iterations = 0
-        change = float('inf') # infinity
+        change = float('inf')
         dy, dx = dy0[index], dx0[index]
         while (iterations < limit and change > threshold):
             # shift the initial image by the current displacement
@@ -86,17 +84,80 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
             dx += delta_x
             dy += delta_y
             # compute the change
-            # change = np.max(np.abs(delta_x)) + np.max(np.abs(delta_y))
             change = np.linalg.norm([delta_x, delta_y])
-            # change = error[mid, mid]
             # update the number of iterations
             iterations += 1
         # update the displacement estimates
         returnx[index] = dx
         returny[index] = dy
-
-
     return np.array([returnx, returny])
+
+def multiscale_lk(i1, i2, features, rho, epsilon, scale, dx0, dy0):
+    """ Multiscale Lucas-Kanade algorithm
+    
+    Keyword arguments:
+    i1 -- initial frame
+    i2 -- next frame
+    features -- coordinates of interest-points
+    rho -- gaussian width parameter
+    epsilon -- minimum constant to avoid zeroes
+    scale -- number of scales
+    dx0 -- initial guesses for movement of features in x axis
+    dy0 -- initial guesses for movement of features in y axis
+    returns -- [dx, dy] actual estimates for movement of features
+    """
+    # first define some helper functions
+    # that do not need to be visible outside
+    # of this function
+    def pyramid(image, levels):
+        """ Create a pyramid of images
+        
+        Keyword arguments:
+        image -- image to be scaled
+        levels -- number of levels in the pyramid
+        """
+        
+        def downscale(image):
+            """ Downscale the image by a factor of 2
+            
+            Keyword arguments:
+            image -- image to be downscaled
+            """
+            gauss = getGaussianKernel(3, 1)
+            gauss = gauss @ gauss.T
+            return filter2D(image, -1, gauss)[::2,::2]
+        
+        result = [image]
+        for i in range(levels):
+            result.append(downscale(result[i]))
+        
+        # return the pyramid in reverse order
+        # be careful.
+        return result.reverse()
+    
+    # convert the images to float in [0,1]
+    # for the parameters to make sense
+    i1 = i1.astype(np.float)/255
+    i2 = i2.astype(np.float)/255
+    # from deep level to shallow level
+    pyramid1 = pyramid(i1, scale)
+    pyramid2 = pyramid(i2, scale)
+    # initialize result vectors
+    # chained assignments do not work
+    # because numpy arrays are mutable
+    dx, dy = np.zeros(len(features)), np.zeros(len(features))
+    dx0, dy0 = np.zeros(len(features)), np.zeros(len(features))
+    
+    for level in range(scale):
+        [dx, dy] = lk(pyramid1[level], pyramid2[level], features, rho, epsilon, dx0, dy0)
+        # update the initial guesses
+        dx, dy = 2*dx, 2*dy
+        dx0, dy0 = dx, dy
+
+    return np.array([dx, dy])
+
+    
+
 
 def displ(dx, dy, threshold):
     """ Display the optical flow
