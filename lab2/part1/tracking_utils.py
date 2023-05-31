@@ -1,7 +1,6 @@
 import numpy as np
-from cv2 import getGaussianKernel, filter2D
+from cv2 import getGaussianKernel, filter2D, goodFeaturesToTrack
 from scipy.ndimage import map_coordinates
-from matplotlib.pyplot import quiver
 
 def shift_image(image, shift):
     """ Shift the image
@@ -92,18 +91,16 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
         returny[index] = dy
     return np.array([returnx, returny])
 
-def multiscale_lk(i1, i2, features, rho, epsilon, scale, dx0, dy0):
+def multiscale_lk(i1, i2, num_features, rho, epsilon, scale):
     """ Multiscale Lucas-Kanade algorithm
     
     Keyword arguments:
     i1 -- initial frame
     i2 -- next frame
-    features -- coordinates of interest-points
+    num_features -- number of features to track
     rho -- gaussian width parameter
     epsilon -- minimum constant to avoid zeroes
-    scale -- number of scales
-    dx0 -- initial guesses for movement of features in x axis
-    dy0 -- initial guesses for movement of features in y axis
+    scale -- number of scales in the pyramid
     returns -- [dx, dy] actual estimates for movement of features
     """
     # first define some helper functions
@@ -128,36 +125,42 @@ def multiscale_lk(i1, i2, features, rho, epsilon, scale, dx0, dy0):
             return filter2D(image, -1, gauss)[::2,::2]
         
         result = [image]
-        for i in range(levels):
+        for i in range(levels - 1):
             result.append(downscale(result[i]))
         
-        # return the pyramid in reverse order
-        # be careful.
-        return result.reverse()
+        result.reverse()
+        return result
     
-    # convert the images to float in [0,1]
-    # for the parameters to make sense
-    i1 = i1.astype(np.float)/255
-    i2 = i2.astype(np.float)/255
-    # from deep level to shallow level
+    # we should normalize the images,
+    # but we do not need to do it here
+    # because we already do it in lk.
+
+    # therefore, build the pyramids
+    # with the original images
+    # from deep level to shallow level.
     pyramid1 = pyramid(i1, scale)
     pyramid2 = pyramid(i2, scale)
-    # initialize result vectors
-    # chained assignments do not work
-    # because numpy arrays are mutable
-    dx, dy = np.zeros(len(features)), np.zeros(len(features))
-    dx0, dy0 = np.zeros(len(features)), np.zeros(len(features))
+
+    print(f"length of pyramid is {len(pyramid1)}")
+
+    # initialize result vectors.
+    dx0, dy0 = np.zeros(num_features), np.zeros(num_features)
     
     for level in range(scale):
+        print(f"shape of pyramid1[{level}] is {pyramid1[level].shape}")
+        print(f"shape of pyramid2[{level}] is {pyramid2[level].shape}")
+        features = np.squeeze(goodFeaturesToTrack(pyramid2[level], num_features, 0.05, 5).astype(int))
+        
         [dx, dy] = lk(pyramid1[level], pyramid2[level], features, rho, epsilon, dx0, dy0)
+        [flowx, flowy] = displ(dx, dy, 0.7)
         # update the initial guesses
-        dx, dy = 2*dx, 2*dy
-        dx0, dy0 = dx, dy
+        if level < scale - 1:
+            dx0 = np.full(pyramid1[level+1].shape, 2*flowx)
+            dy0 = np.full(pyramid1[level+1].shape, 2*flowy)
+        
+
 
     return np.array([dx, dy])
-
-    
-
 
 def displ(dx, dy, threshold):
     """ Display the optical flow
@@ -172,6 +175,9 @@ def displ(dx, dy, threshold):
     energy = np.array([np.array([dx, dy])
                        for x, y in zip(dx, dy)
                        if (x**2 + y**2) > threshold*mean_energy])
+    
+    # check if there are any features
+    # with enough energy
     if energy.shape[0] == 0:
         return [0, 0]
     return [np.mean(energy[:,0]), np.mean(energy[:,1])]
