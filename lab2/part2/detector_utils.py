@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import scipy.ndimage as scp
 from cv23_lab2_2_utils import read_video
+from cv23_lab2_2_utils import show_detection
 
 
 def video_gradients(video):
@@ -62,7 +63,25 @@ def video_smoothen(video, sigma, tau):
             video[x,y,:] = scp.convolve1d(video[x,y,:], time_kernel, mode='constant', cval=0.0)
     return video
 
-def interest_points(response, rho):
+def video_smoothen_space(video, sigma):
+    """
+    Smoothen a video in space.
+    
+    Keyword arguments:
+    video -- input video (y_len, x_len, frames) normalized to [0, 1]
+    sigma -- Gaussian kernel space standard deviation
+    """
+    # define Gaussian kernel
+    space_size = int(2*np.ceil(3*sigma)+1)
+    x_kernel = cv2.getGaussianKernel(space_size, sigma)
+    y_kernel = cv2.getGaussianKernel(space_size, sigma)
+    space_kernel = x_kernel @ y_kernel.T
+    # smoothen the video
+    for t_slice in range(video.shape[2]):
+        video[:,:,t_slice] = cv2.filter2D(video[:,:,t_slice], -1, space_kernel)
+    return video
+
+def interest_points(response, rho, s):
     """
     Find interest points in a video.
     
@@ -72,10 +91,13 @@ def interest_points(response, rho):
     """
     maxr = np.max(response.flatten())
     x, y, t = np.where(response > rho * maxr)
-    indices = np.column_stack((y, x, t))
-    return indices
+    values = response[x, y, t]
+    indices = np.argsort(values)[-500:]
+    rx, ry, rt = x[indices], y[indices], t[indices]
+    result = np.column_stack((rx, ry, rt, np.ones_like(rx)*s))
+    return result
 
-def HarrisDetector(video, s, sigma, tau, kappa):
+def HarrisDetector(v, s, sigma, tau, kappa):
     """
     Harris Corner Detector
     
@@ -86,6 +108,7 @@ def HarrisDetector(video, s, sigma, tau, kappa):
     tau -- Gaussian kernel time standard deviation
     rho -- Harris response threshold
     """
+    video = v.copy()
     video = video.astype(np.float32)/255
     video = video_smoothen(video, sigma, tau)
     Lx, Ly, Lt = video_gradients(video)
@@ -122,10 +145,10 @@ def HarrisDetector(video, s, sigma, tau, kappa):
     det = (Lxx * Lyy * Ltt) + (2 * Lxy * Lyt * Lxt - Lxt * Lyy * Lxt) - (Lxy * Lxy * Ltt) - (Lxx * Lyt * Lyt)
     response = det - kappa * trace * trace * trace
     # find interest points
-    points = interest_points(response, 0.1) 
+    points = interest_points(response, 0.05, s)
     return points
 
-def GaborDetector(video, sigma, tau, kappa):
+def GaborDetector(v, sigma, tau, kappa):
     """
     Gabor Detector
     
@@ -135,8 +158,9 @@ def GaborDetector(video, sigma, tau, kappa):
     tau -- Gaussian kernel time standard deviation
     kappa -- Gabor response threshold
     """
+    video = v.copy()
     video = video.astype(np.float32)/255
-    video = video_smoothen(video, sigma, tau)
+    video = video_smoothen_space(video, sigma)
     # define the gabor filters
     # first define a linspace of width -2tau to 2tau
     time = np.linspace(-2*tau, 2*tau, int(4*tau+1))
@@ -147,18 +171,33 @@ def GaborDetector(video, sigma, tau, kappa):
     # normalize the L1 norm
     h_ev = h_ev / np.sum(np.abs(h_ev))
     h_od = h_od / np.sum(np.abs(h_od))
-    response = (cv2.filter2D(video, -1, h_ev) ** 2) + (cv2.filter2D(video, -1, h_od) ** 2)
+    response = np.zeros_like(video)
+    print(f"video[0,0,:] shape: {video[0,0,:].shape}")
+    print(f"response[0,0,:] shape: {response[0,0,:].shape}")
+    for x in range(video.shape[0]):
+        for y in range(video.shape[1]):
+            response[x,y,:] = (cv2.filter2D(video[x,y,:], -1, h_ev) ** 2).T[0] + (cv2.filter2D(video[x,y,:], -1, h_od) ** 2).T[0]
+            
     # find interest points
-    points = interest_points(response, 0.1) 
+    print(f"respone shape: {response.shape}")
+    points = interest_points(response, 0.1, sigma)
+    # keep the top 500 points
     return points
 
 
 if __name__ == "__main__":
     num_frames = 200
-    video = read_video("SpatioTemporal/walking/person04_running_d1_uncomp.avi", num_frames, 0)
-    harris_points = HarrisDetector(video, 2, 4, 1.5, 0.005)
-    gabor_points = GaborDetector(video, 4, 1.5, 0.005)
-
+    METHOD = "Harris"
+    video = read_video("SpatioTemporal/running/person07_running_d3_uncomp.avi", num_frames, 0)
+    if METHOD == "Harris":
+        harris_points = HarrisDetector(video, 1.5, 2.5, 0.7, 0.005)
+        print("Harris points: ", harris_points.shape)
+        show_detection(video, harris_points, "Harris Detector")
+    elif METHOD == "Gabor":
+        gabor_points = GaborDetector(video, 4, 1.5, 0.005)
+        print("Gabor points: ", gabor_points.shape)
+        show_detection(video, gabor_points, "Gabor Detector")
+        
 
 
     
