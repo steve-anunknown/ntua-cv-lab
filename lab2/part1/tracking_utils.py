@@ -1,5 +1,6 @@
 import numpy as np
-from cv2 import getGaussianKernel, filter2D, goodFeaturesToTrack
+import imageio
+import cv2
 from scipy.ndimage import map_coordinates
 
 def lk(i1, i2, features, rho, epsilon, dx0, dy0):
@@ -40,7 +41,7 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
     # this kernel acts as a gaussian filter
     size = int(2*np.ceil(3*rho)+1)
     mid = (size-1)//2
-    kernel = getGaussianKernel(size, rho)
+    kernel = cv2.getGaussianKernel(size, rho)
     kernel = kernel @ kernel.T
     
     # initialize result vectors
@@ -71,11 +72,11 @@ def lk(i1, i2, features, rho, epsilon, dx0, dy0):
             # compute the error between the shifted image and the next image
             error = next_image - shifted_image
             # compute the Lucas-Kanade equations
-            s11 = filter2D(shifted_gradient_x**2, -1, kernel)[mid,mid] + epsilon
-            s12 = filter2D(shifted_gradient_x*shifted_gradient_y, -1, kernel)[mid,mid]
-            s22 = filter2D(shifted_gradient_y**2, -1, kernel)[mid,mid] + epsilon
-            b1 = filter2D(shifted_gradient_x*error, -1, kernel)[mid,mid]
-            b2 = filter2D(shifted_gradient_y*error, -1, kernel)[mid,mid]
+            s11 = cv2.filter2D(shifted_gradient_x**2, -1, kernel)[mid,mid] + epsilon
+            s12 = cv2.filter2D(shifted_gradient_x*shifted_gradient_y, -1, kernel)[mid,mid]
+            s22 = cv2.filter2D(shifted_gradient_y**2, -1, kernel)[mid,mid] + epsilon
+            b1 = cv2.filter2D(shifted_gradient_x*error, -1, kernel)[mid,mid]
+            b2 = cv2.filter2D(shifted_gradient_y*error, -1, kernel)[mid,mid]
             # compute the determinant of the system
             det = s11*s22 - s12*s12
             # compute the improvement
@@ -122,9 +123,9 @@ def multiscale_lk(i1, i2, num_features, rho, epsilon, scale):
             Keyword arguments:
             image -- image to be downscaled
             """
-            gauss = getGaussianKernel(3, 1)
+            gauss = cv2.getGaussianKernel(3, 1)
             gauss = gauss @ gauss.T
-            return filter2D(image, -1, gauss)[::2,::2]
+            return cv2.filter2D(image, -1, gauss)[::2,::2]
         
         result = [image]
         for i in range(levels - 1):
@@ -147,7 +148,7 @@ def multiscale_lk(i1, i2, num_features, rho, epsilon, scale):
     dx0, dy0 = np.zeros(num_features), np.zeros(num_features)
     
     for level in range(scale):
-        features = np.squeeze(goodFeaturesToTrack(pyramid2[level], num_features, 0.05, 5).astype(int))
+        features = np.squeeze(cv2.goodFeaturesToTrack(pyramid2[level], num_features, 0.05, 5).astype(int))
         
         [dx, dy] = lk(pyramid1[level], pyramid2[level], features, rho, epsilon, dx0, dy0)
         [flowx, flowy] = displ(dx, dy, 0.7)
@@ -177,3 +178,16 @@ def displ(dx, dy, threshold):
     if energy.shape[0] == 0:
         return [0, 0]
     return [np.mean(energy[:,0]), np.mean(energy[:,1])]
+
+def makegif(path, name):
+  images = []
+  for i in range(1, 69):
+    print(path + str(i) + '.png')
+    img = cv2.imread(path + str(i) + '.png',1)
+    #check if image is empty
+    if img is None:
+      print('Image is empty')
+      return
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    images.append(img)
+  imageio.mimsave('gifs/'+name, images)

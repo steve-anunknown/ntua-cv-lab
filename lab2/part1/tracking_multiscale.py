@@ -1,5 +1,6 @@
 from tracking_utils import multiscale_lk
 from tracking_utils import displ
+from tracking_utils import makegif
 from skin_detection_utils import FitSkinGaussian
 from skin_detection_utils import fd
 import matplotlib.pyplot as plt
@@ -24,6 +25,7 @@ if __name__ == "__main__":
     gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
     colours = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
     print(f"image.shape: {gray.shape}")
+    boundaries = fd(initial, mu, cov)
     print(f"face: {boundaries[0]}")
     print(f"right hand: {boundaries[1]}")
     print(f"left hand: {boundaries[2]}")
@@ -60,16 +62,18 @@ if __name__ == "__main__":
             boundaries[index] = (y, x, h, w)
             
             # show the new boundaries
-            cv2.rectangle(image2, (x, y), (x + w, y + h), colours[index], 2)
+            cv2.rectangle(image1, (x, y), (x + w, y + h), colours[index], 2)
             
             # plot the flow like a gradient field
             features = np.squeeze(cv2.goodFeaturesToTrack(cropped2, feats, 0.05, 5).astype(int))
             axs[axindices[index]].quiver(features[:, 0], features[:, 1], -dx, -dy, angles='xy')
             axs[axindices[index]].set_title(f"Optical flow for {names[index]}")
 
-        axs[1, 1].imshow(image2)
-        axs[1, 1].set_title(f"Frame {i+1}")
+        axs[1, 1].imshow(image1)
+        axs[1, 1].set_title(f"Frame {i}")
         plt.tight_layout()
-        plt.show()
+        # save the figure
+        plt.savefig(f"flow_multiscale/{i}.png")
+    makegif("flow_multiscale/", "flow_multiscale.gif")
 
 
