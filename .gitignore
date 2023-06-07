@@ -7,5 +7,5 @@ Data
 SpatioTemporal
 kodikas_diagrammata.txt
 alternative_harris.py
-c23_lab2_2_utils.pyc
+*.pyc
 makegif.py
