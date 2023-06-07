@@ -1,7 +1,9 @@
 import cv2
+import numba
 import numpy as np
 import scipy.ndimage as scp
 from cv23_lab2_2_utils import orientation_histogram
+
 
 def video_gradients(video):
     """
@@ -215,7 +217,7 @@ def LogMetricFilter(video, points_per_scale, tau):
     # find the points that maximize the log metric
     return LogMetric(logs, points_per_scale, len(points_per_scale))
 
-def hog_descriptors(video, interest_points, sigma, nbins):
+def get_hog_descriptors(video, interest_points, sigma, nbins):
     """
     Compute the HOG descriptors of a video.
     
@@ -230,18 +232,17 @@ def hog_descriptors(video, interest_points, sigma, nbins):
     side = int(round(4*sigma))
     descriptors = []
     for point in interest_points:
-        leftmost = max(0, point[0]-side)
-        rightmost = min(video.shape[1]-1, point[0]+side+1)
-        upmost = max(0, point[1]-side)
-        downmost = min(video.shape[0]-1, point[1]+side+1)
-
-        descriptor = orientation_histogram(Lx[upmost:downmost, leftmost:rightmost, point[2]],
-                                          Ly[upmost:downmost, leftmost:rightmost, point[2]],
-                                          nbins, np.array([side, side]))
+        leftmost = int(max(0, point[0]-side))
+        rightmost = int(min(video.shape[1]-1, point[0]+side+1))
+        upmost = int(max(0, point[1]-side))
+        downmost = int(min(video.shape[0]-1, point[1]+side+1))
+        descriptor = orientation_histogram(Lx[upmost:downmost, leftmost:rightmost, int(point[2])],
+                                           Ly[upmost:downmost, leftmost:rightmost, int(point[2])],
+                                           nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)
 
-def hof_descriptors(video, interest_points, sigma, nbins):
+def get_hof_descriptors(video, interest_points, sigma, nbins):
     """
     Compute the HOF descriptors of a video.
     
@@ -255,14 +256,28 @@ def hof_descriptors(video, interest_points, sigma, nbins):
     oflow = cv2.DualTVL1OpticalFlow_create(nscales=1)
     descriptors = []
     for point in interest_points:
-        leftmost = max(0, point[0]-side)
-        rightmost = min(video.shape[1]-1, point[0]+side+1)
-        upmost = max(0, point[1]-side)
-        downmost = min(video.shape[0]-1, point[1]+side+1)
-        flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, point[2]],
-                          video[upmost:downmost, leftmost:rightmost, point[2]+1], None)
+        leftmost = int(max(0, point[0]-side))
+        rightmost = int(min(video.shape[1]-1, point[0]+side+1))
+        upmost = int(max(0, point[1]-side))
+        downmost = int(min(video.shape[0]-1, point[1]+side+1))
+        flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, int(point[2])],
+                          video[upmost:downmost, leftmost:rightmost, int(point[2])+1], None)
         descriptor = orientation_histogram(flow[...,0], flow[...,1], nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)
 
+
+def get_hog_hof(video, interest_points, sigma, nbins):
+    """
+    Compute the HOG and HOF descriptors of a video.
+    
+    Keyword arguments:
+    video -- input video (y_len, x_len, frames)
+    interest_points -- interest points (y, x, t, s)
+    sigma -- Gaussian kernel space standard deviation
+    nbins -- number of bins
+    """
+    hog = get_hog_descriptors(video, interest_points, sigma, nbins)
+    hof = get_hof_descriptors(video, interest_points, sigma, nbins)
+    return hog, hof
 
