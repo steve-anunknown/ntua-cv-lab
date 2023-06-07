@@ -9,6 +9,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         video_name = sys.argv[1]
     video = read_video(video_name, num_frames, 0)
-    gabor_points = GaborDetector(video, 4, 1.5)
+    gabor_points = GaborDetector(video, sigma=4, tau=1.5, threshold=0.25)
     print("Gabor points: ", gabor_points.shape)
     show_detection(video, gabor_points, "Gabor Detector")

@@ -75,7 +75,7 @@ def interest_points(response, rho, s):
     points = np.column_stack((y, x, t, s*np.ones(len(x))))
     return points
 
-def HarrisDetector(v, s, sigma, tau, kappa):
+def HarrisDetector(v, s, sigma, tau, kappa, threshold):
     """
     Harris Corner Detector
     
@@ -114,10 +114,10 @@ def HarrisDetector(v, s, sigma, tau, kappa):
     det = Lxx*(Lyy*Ltt - Lyt*Lyt) - Lxy*(Lxy*Ltt - Lyt*Lxt) + Lxt*(Lxy*Lyt - Lyy*Lxt)
     response = (det - kappa * trace * trace * trace)
     # find interest points
-    points = interest_points(response, 0.01, sigma)
+    points = interest_points(response, threshold, sigma)
     return points
 
-def GaborDetector(v, sigma, tau):
+def GaborDetector(v, sigma, tau, threshold):
     """
     Gabor Detector
     
@@ -142,7 +142,7 @@ def GaborDetector(v, sigma, tau):
     h_od /= np.linalg.norm(h_od, ord=1)
     # compute the response
     response = (scp.convolve1d(video, h_ev, axis=2) ** 2) + (scp.convolve1d(video, h_od, axis=2) ** 2)
-    points = interest_points(response, 0.25, sigma)
+    points = interest_points(response, threshold, sigma)
     return points
 
 def MultiscaleDetector(detector, video, sigmas, tau):
