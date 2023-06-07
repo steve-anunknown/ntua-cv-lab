@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import scipy.ndimage as scp
+from cv23_lab2_2_utils import orientation_histogram
 
 def video_gradients(video):
     """
@@ -141,70 +142,127 @@ def GaborDetector(v, sigma, tau):
     h_od /= np.linalg.norm(h_od, ord=1)
     # compute the response
     response = (scp.convolve1d(video, h_ev, axis=2) ** 2) + (scp.convolve1d(video, h_od, axis=2) ** 2)
-    points = interest_points(response, 0.2, sigma)
+    points = interest_points(response, 0.25, sigma)
     return points
 
-def LogMetric(logs, itemsperscale, N):
-    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
-    # returns the coordinates of the points that maximize
-    # the log metric in a neighborhood of 3 scales
-    # (prev scale), (curr scale), (next scale)
-    final = []
-    for index, items in enumerate(itemsperscale):
-        logp = logs[max(index-1,0)]
-        logc = logs[index]
-        logn = logs[min(index+1,N-1)]
-        for triplet in items:
-            x = int(triplet[1])
-            y = int(triplet[0])
-            prev = logp[x,y]
-            curr = logc[x,y]
-            next = logn[x,y]
-            if (curr >= prev) and (curr >= next):
-                final.append(triplet)
-    return np.array(final)
-
-def MultiscaleHarrisDetector(v, s, sigma, tau, kappa, scale, N):
+def MultiscaleDetector(detector, video, sigmas, tau):
     """
-    Multiscale Harris Corner Detector
+    Multiscale Detector
 
-    Executes the Harris Corner Detector at multiple scales.
+    Executes a detector at multiple scales. Detector has to be a function that
+    takes a video as input, along with other parameters, and returns a list of interest points.
+
     
     Keyword arguments:
+    detector -- function that returns interest points
     video -- input video (y_len, x_len, frames)
-    sigma -- Gaussian kernel space standard deviation
-    tau -- Gaussian kernel time standard deviation
-    kappa -- Harris response threshold
-    scale -- Gaussian kernel space standard deviation for scale
-    N -- number of scales
+    sigmas -- list of scales
     """
-    # define scales
-    scales = (s**i for i in range(N))
-    sigmas = (sigma*scale for scale in scales)
     # for every scale, compute the Harris response
     points = []
     for sigm in sigmas:
-        points.append(HarrisDetector(v, s, sigm, tau, kappa))
+        found = detector(video, sigm, tau)
+        points.append(found)
+    return LogMetricFilter(video, points, tau)
+
+def LogMetricFilter(video, points_per_scale, tau):
+    """
+    Filters interest points according to the log metric
+    
+    Keyword arguments:
+    video -- input video (y_len, x_len, frames)
+    points_per_scale -- list of interest points
+    """
+    def LogMetric(logs, itemsperscale, N):
+        # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
+        # returns the coordinates of the points that maximize
+        # the log metric in a neighborhood of 3 scales
+        # (prev scale), (curr scale), (next scale)
+        final = []
+        for index, items in enumerate(itemsperscale):
+            logp = logs[max(index-1,0)]
+            logc = logs[index]
+            logn = logs[min(index+1,N-1)]
+            for triplet in items:
+                y, x, t = int(triplet[0]), int(triplet[1]), int(triplet[2])
+                prev = logp[x, y, t]
+                curr = logc[x, y, t]
+                next = logn[x, y, t]
+                if (curr >= prev) and (curr >= next):
+                    final.append(triplet)
+        return np.array(final)
+    v = video.copy()
+    vnorm = v.astype(float)/video.max()
     # compute the laplacian of gaussian (log) metric
-    # log((x,y), s) = (s^2)|Lxx((x,y),s) + Lyy((x,y),s)|
-    # smoothen the video for every scale
-    video = v.copy()
-    video = video.astype(float)/video.max()
     logs = []
-    for sigm in sigmas:
-        video = video_smoothen(video, sigm, tau)
+    time_size = int(2*np.ceil(3*tau)+1)
+    time_kernel = cv2.getGaussianKernel(time_size, tau).T[0]
+    # get the sigmas from the points
+    sigmas = [item[0, 3] for item in points_per_scale]
+    for sigma in sigmas:
+        # define Gaussian kernel
+        space_size = int(2*np.ceil(3*sigma)+1)
+        space_kernel = cv2.getGaussianKernel(space_size, sigma).T[0]
+        v = video_smoothen(vnorm, space_kernel, time_kernel)
         # compute gradients
-        Ly, Lx, _ = video_gradients(video)
+        Ly, Lx, _ = video_gradients(v)
         # compute second order derivatives
         Lyy, _, _ = video_gradients(Ly)
         _, Lxx, _ = video_gradients(Lx)
         # compute the log metric
-        log = (sigm**2) * np.abs(Lxx + Lyy)
+        log = (sigma**2) * np.abs(Lxx + Lyy)
         logs.append(log)
     # find the points that maximize the log metric
-    final_points = LogMetric(logs, points, N)
-    return final_points
+    return LogMetric(logs, points_per_scale, len(points_per_scale))
 
-        
+def hog_descriptors(video, interest_points, sigma, nbins):
+    """
+    Compute the HOG descriptors of a video.
+    
+    Keyword arguments:
+    video -- input video (y_len, x_len, frames)
+    interest_points -- interest points (y, x, t, s)
+    sigma -- Gaussian kernel space standard deviation
+    nbins -- number of bins
+    """
+    # gradients
+    Ly, Lx, _ = video_gradients(video)
+    side = int(round(4*sigma))
+    descriptors = []
+    for point in interest_points:
+        leftmost = max(0, point[0]-side)
+        rightmost = min(video.shape[1]-1, point[0]+side+1)
+        upmost = max(0, point[1]-side)
+        downmost = min(video.shape[0]-1, point[1]+side+1)
+
+        descriptor = orientation_histogram(Lx[upmost:downmost, leftmost:rightmost, point[2]],
+                                          Ly[upmost:downmost, leftmost:rightmost, point[2]],
+                                          nbins, np.array([side, side]))
+        descriptors.append(descriptor)
+    return np.array(descriptors)
+
+def hof_descriptors(video, interest_points, sigma, nbins):
+    """
+    Compute the HOF descriptors of a video.
+    
+    Keyword arguments:
+    video -- input video (y_len, x_len, frames)
+    interest_points -- interest points (y, x, t, s)
+    sigma -- Gaussian kernel space standard deviation
+    nbins -- number of bins
+    """
+    side = int(round(4*sigma))
+    oflow = cv2.DualTVL1OpticalFlow_create(nscales=1)
+    descriptors = []
+    for point in interest_points:
+        leftmost = max(0, point[0]-side)
+        rightmost = min(video.shape[1]-1, point[0]+side+1)
+        upmost = max(0, point[1]-side)
+        downmost = min(video.shape[0]-1, point[1]+side+1)
+        flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, point[2]],
+                          video[upmost:downmost, leftmost:rightmost, point[2]+1], None)
+        descriptor = orientation_histogram(flow[...,0], flow[...,1], nbins, np.array([side, side]))
+        descriptors.append(descriptor)
+    return np.array(descriptors)
 
 
