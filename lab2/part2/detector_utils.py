@@ -262,6 +262,9 @@ def get_hof_descriptors(video, interest_points, sigma, nbins):
         downmost = int(min(video.shape[0]-1, point[1]+side+1))
         flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, int(point[2])],
                           video[upmost:downmost, leftmost:rightmost, int(point[2])+1], None)
+        # TODO: this produces an error
+        # it's either due to the parameters which it is called with
+        # or due to bad code.
         descriptor = orientation_histogram(flow[...,0], flow[...,1], nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)

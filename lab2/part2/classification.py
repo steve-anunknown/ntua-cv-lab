@@ -73,6 +73,8 @@ if __name__ == "__main__":
     # otherwise, create it
     else:
         # create the descriptors
+        # TODO: the get_hog_hof function produces an error
+        # it's either due to the parameters or the function itself
         hogs_train_gabor, hofs_train_gabor = [], []
         hogs_train_harris, hofs_train_harris = [], []
         hogs_test_gabor, hofs_test_gabor = [], []
