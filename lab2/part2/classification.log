@@ -1,0 +1,18 @@
+classification.py:124: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Train.shape = {np.array(train).shape}")
+classification.py:125: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Test.shape = {np.array(test).shape}")
+classification.py:124: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Train.shape = {np.array(train).shape}")
+classification.py:125: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Test.shape = {np.array(test).shape}")
+/home/stefanos/Documents/programming-projects/uni/ntua-cv-lab/lab2/part2/cv23_lab2_2_utils.py:179: ConvergenceWarning: Number of distinct clusters (1) found smaller than n_clusters (50). Possibly due to duplicate points in X.
+classification.py:124: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Train.shape = {np.array(train).shape}")
+classification.py:125: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Test.shape = {np.array(test).shape}")
+classification.py:124: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Train.shape = {np.array(train).shape}")
+classification.py:125: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray.
+  print(f"Test.shape = {np.array(test).shape}")
+/home/stefanos/Documents/programming-projects/uni/ntua-cv-lab/lab2/part2/cv23_lab2_2_utils.py:179: ConvergenceWarning: Number of distinct clusters (1) found smaller than n_clusters (50). Possibly due to duplicate points in X.

@@ -88,13 +88,17 @@ def HarrisDetector(v, s, sigma, tau, kappa, threshold):
     tau -- Gaussian kernel time standard deviation
     rho -- Harris response threshold
     """
+    # FIXME: this function does not produce an error
+    # but I don't think it runs correctly.
+    # the points it finds are not satisfying.
+    
     # define Gaussian kernel
     space_size = int(2*np.ceil(3*sigma)+1)
     time_size = int(2*np.ceil(3*tau)+1)
     space_kernel = cv2.getGaussianKernel(space_size, sigma).T[0]
     time_kernel = cv2.getGaussianKernel(time_size, tau).T[0]
     # setup video
-    video = v.copy()
+    video = v.copy() # copy so we don't modify the original
     video = video.astype(float)/video.max()
     video = video_smoothen(video, space_kernel, time_kernel)
     # compute gradients
@@ -160,6 +164,10 @@ def MultiscaleDetector(detector, video, sigmas, tau):
     video -- input video (y_len, x_len, frames)
     sigmas -- list of scales
     """
+    # FIXME: probably needs refactoring.
+    # the code is clear but super inefficient.
+    # the gradients are computed a gazillion times.
+    
     # for every scale, compute the Harris response
     points = []
     for sigm in sigmas:
@@ -228,7 +236,7 @@ def get_hog_descriptors(video, interest_points, sigma, nbins):
     nbins -- number of bins
     """
     # gradients
-    Ly, Lx, _ = video_gradients(video)
+    Ly, Lx, _ = video_gradients(video.astype(float))
     side = int(round(4*sigma))
     descriptors = []
     for point in interest_points:
@@ -236,6 +244,10 @@ def get_hog_descriptors(video, interest_points, sigma, nbins):
         rightmost = int(min(video.shape[1]-1, point[0]+side+1))
         upmost = int(max(0, point[1]-side))
         downmost = int(min(video.shape[0]-1, point[1]+side+1))
+        # FIXME: this produces an error
+        # it's either due to the parameters which it is called with
+        # or due to bad code.
+        # DONE: the error was due to the fact that the video was not of float type.
         descriptor = orientation_histogram(Lx[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            Ly[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            nbins, np.array([side, side]))
@@ -261,10 +273,10 @@ def get_hof_descriptors(video, interest_points, sigma, nbins):
         upmost = int(max(0, point[1]-side))
         downmost = int(min(video.shape[0]-1, point[1]+side+1))
         flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, int(point[2])],
-                          video[upmost:downmost, leftmost:rightmost, int(point[2])+1], None)
-        # TODO: this produces an error
-        # it's either due to the parameters which it is called with
-        # or due to bad code.
+                          video[upmost:downmost, leftmost:rightmost, int(point[2])], None)
+        # the same error is not produced here. therefore, the problem probably lies in the
+        # get_hog_descriptors function
+        # FIXME: new error here. out of bounds
         descriptor = orientation_histogram(flow[...,0], flow[...,1], nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)
