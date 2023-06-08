@@ -48,34 +48,27 @@ def video_smoothen_space(video, sigma):
     video = scp.convolve1d(video, kernel, axis=1)
     return video
 
-def interest_points(response, rho, s):
+def interest_points(response, num, threshold, scale):
     """
     Find interest points in a video.
     
     Keyword arguments:
     response -- response (y_len, x_len, frames)
     num -- number of interest points
-    s -- scale
+    threshold -- threshold
+    scale -- scale
     """
-    def disk_strel(n):
-        '''
-            Return a structural element, which is a disk of radius n.
-        '''
-        r = int(np.round(n))
-        d = 2*r+1
-        x = np.arange(d) - r
-        y = np.arange(d) - r
-        x, y = np.meshgrid(x,y)
-        strel = x**2 + y**2 <= r**2
-        return strel.astype(np.uint8)
-    ns = int(2*np.ceil(3*s)+1)
-    strel = disk_strel(ns)
-    cond1 = ( response == cv2.dilate(response, strel) )
     maxr = np.max(response.flatten())
-    cond2 = ( response > rho*maxr )
-    x, y, t = np.where(cond1 & cond2)
-    points = np.column_stack((y, x, t, s*np.ones(len(x))))
-    return points
+    x, y, t = np.where(response > threshold*maxr)
+    points = np.column_stack((y, x, t, scale*np.ones(len(x))))
+    
+    # Sort points based on response values in descending order
+    response_values = response[x, y, t]
+    sorted_indices = np.argsort(response_values)[::-1]  # Sort in descending order
+    
+    # Select the top 'num' points
+    top_points = points[sorted_indices[:num]]
+    return top_points
 
 def HarrisDetector(v, s, sigma, tau, kappa, threshold):
     """
@@ -87,11 +80,7 @@ def HarrisDetector(v, s, sigma, tau, kappa, threshold):
     sigma -- Gaussian kernel space standard deviation
     tau -- Gaussian kernel time standard deviation
     rho -- Harris response threshold
-    """
-    # FIXME: this function does not produce an error
-    # but I don't think it runs correctly.
-    # the points it finds are not satisfying.
-    
+    """    
     # define Gaussian kernel
     space_size = int(2*np.ceil(3*sigma)+1)
     time_size = int(2*np.ceil(3*tau)+1)
@@ -120,7 +109,7 @@ def HarrisDetector(v, s, sigma, tau, kappa, threshold):
     det = Lxx*(Lyy*Ltt - Lyt*Lyt) - Lxy*(Lxy*Ltt - Lyt*Lxt) + Lxt*(Lxy*Lyt - Lyy*Lxt)
     response = (det - kappa * trace * trace * trace)
     # find interest points
-    points = interest_points(response, threshold, sigma)
+    points = interest_points(response, num=500, threshold=threshold, scale=sigma)
     return points
 
 def GaborDetector(v, sigma, tau, threshold):
@@ -148,7 +137,7 @@ def GaborDetector(v, sigma, tau, threshold):
     h_od /= np.linalg.norm(h_od, ord=1)
     # compute the response
     response = (scp.convolve1d(video, h_ev, axis=2) ** 2) + (scp.convolve1d(video, h_od, axis=2) ** 2)
-    points = interest_points(response, threshold, sigma)
+    points = interest_points(response, num=500, threshold=threshold, scale=sigma)
     return points
 
 def MultiscaleDetector(detector, video, sigmas, tau):
@@ -237,17 +226,13 @@ def get_hog_descriptors(video, interest_points, sigma, nbins):
     """
     # gradients
     Ly, Lx, _ = video_gradients(video.astype(float))
-    side = int(round(4*sigma))
     descriptors = []
     for point in interest_points:
+        side = int(round(4*point[3]))
         leftmost = int(max(0, point[0]-side))
         rightmost = int(min(video.shape[1]-1, point[0]+side+1))
         upmost = int(max(0, point[1]-side))
         downmost = int(min(video.shape[0]-1, point[1]+side+1))
-        # FIXME: this produces an error
-        # it's either due to the parameters which it is called with
-        # or due to bad code.
-        # DONE: the error was due to the fact that the video was not of float type.
         descriptor = orientation_histogram(Lx[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            Ly[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            nbins, np.array([side, side]))
@@ -264,19 +249,16 @@ def get_hof_descriptors(video, interest_points, sigma, nbins):
     sigma -- Gaussian kernel space standard deviation
     nbins -- number of bins
     """
-    side = int(round(4*sigma))
     oflow = cv2.DualTVL1OpticalFlow_create(nscales=1)
     descriptors = []
     for point in interest_points:
+        side = int(round(4*point[3]))
         leftmost = int(max(0, point[0]-side))
         rightmost = int(min(video.shape[1]-1, point[0]+side+1))
         upmost = int(max(0, point[1]-side))
         downmost = int(min(video.shape[0]-1, point[1]+side+1))
         flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, int(point[2])],
                           video[upmost:downmost, leftmost:rightmost, int(point[2])], None)
-        # the same error is not produced here. therefore, the problem probably lies in the
-        # get_hog_descriptors function
-        # FIXME: new error here. out of bounds
         descriptor = orientation_histogram(flow[...,0], flow[...,1], nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)
@@ -295,4 +277,6 @@ def get_hog_hof(video, interest_points, sigma, nbins):
     hog = get_hog_descriptors(video, interest_points, sigma, nbins)
     hof = get_hof_descriptors(video, interest_points, sigma, nbins)
     return hog, hof
+        
+    
 
