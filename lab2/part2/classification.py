@@ -156,8 +156,6 @@ def run_test(scale, detector, descriptor, points):
     descriptor -- the descriptor to use
     points -- the number of points to use
     """
-    # FIXME: function has the same variable as its name
-    # it messes up the filenames later on
     fun_detector = init_detectors(scale, detector)
     get_descriptors = init_descriptors(descriptor)
     train_names, test_names = get_names()
@@ -169,10 +167,18 @@ def run_test(scale, detector, descriptor, points):
     test_labels = [label_mappings[name.split("_")[1]] for name in test_names]
     # Generate train_labels
     train_labels = [label_mappings[name.split("_")[1]] for name in train_names]
-
-    # Extract descriptors
-    test_descriptors = extract_descriptors(test_names, fun_detector, get_descriptors, points)
-    train_descriptors = extract_descriptors(train_names, fun_detector, get_descriptors, points)
+    
+    # check if descriptors have already been computed
+    if os.path.exists(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points)):
+        print("\n\tLoading descriptors...")
+        with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "rb") as f:
+            descriptors = pickle.load(f)
+        test_descriptors = descriptors["test"]
+        train_descriptors = descriptors["train"]
+    else:
+        # Extract descriptors
+        test_descriptors = extract_descriptors(test_names, fun_detector, get_descriptors, points)
+        train_descriptors = extract_descriptors(train_names, fun_detector, get_descriptors, points)
 
     # train and test
     bow_train, bow_test = bag_of_words(train_descriptors, test_descriptors, num_centers=50)
@@ -183,7 +189,7 @@ def run_test(scale, detector, descriptor, points):
         f.write("Test labels: {test_labels}\n".format(test_labels=test_labels))
 
     with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "wb") as f:
-        pickle.dump((bow_train, bow_test, train_labels, test_labels), f)
+        pickle.dump({"test": test_descriptors, "train": train_descriptors}, f)
 
 def main():
     # perform the test for every combination of parameters
