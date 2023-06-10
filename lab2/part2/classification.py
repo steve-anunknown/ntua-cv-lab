@@ -2,29 +2,89 @@ import os
 import numpy as np
 import random
 import pickle
-from detector_utils import get_hog_hof, GaborDetector, HarrisDetector, MultiscaleDetector, NUM_POINTS
+from memory_profiler import profile
+from detector_utils import get_hog_hof, get_hof_descriptors, get_hog_descriptors, GaborDetector, HarrisDetector, MultiscaleDetector
 from cv23_lab2_2_utils import bag_of_words, read_video, svm_train_test
 
+NBINS = 10
 NUM_FRAMES = 200
-NUM_POINTS = 600
-SCALE = "uniscale"
+
 TRAIN_NAMES_FILE = "train_names.txt"
 TEST_NAMES_FILE = "test_names.txt"
-DESCRIPTORS_FILE = f"classification_descriptors/{SCALE}_{NUM_POINTS}.pickle"
-RESULTS_FILE = "classification_results/{scale}_{method}_{points}.txt"
+
 VIDEO_FOLDER = "SpatioTemporal/{label}"
 
-if __name__ == "__main__":
-    if SCALE == "uniscale":
-        harris = lambda video: HarrisDetector(video, 2, 3, 1.5, kappa=0.005, threshold=0.05)
-        gabor = lambda video: GaborDetector(video, 3, 1.5, threshold=0.3)
-    elif SCALE == "multiscale":
-        harris = lambda video: MultiscaleDetector(lambda video, sigma, tau: HarrisDetector(video, 2, sigma, tau, kappa=0.005, threshold=0.05),
-                                                  video, [3*(1.1**i) for i in range(6)], tau=1.5)
-        gabor = lambda video: MultiscaleDetector(lambda video, sigma, tau: GaborDetector(video, sigma, tau, threshold=0.3),
-                                                 video, sigmas=[3*(1.1**i) for i in range(6)], tau=1.5)
+# define dictionary for multiple tests
+# each test is a dictionary with keys:
+# scale, detector, descriptor, points
+PARAMETERS = {
+    "scale": ["uniscale", "multiscale"],
+    "detector": ["gabor", "harris"],
+    "descriptor": ["hog_hof", "hog", "hof"],
+    "points": [500]
+}
+DESCRIPTORS_FILE = "classification_descriptors/{scale}_{detector}_{descriptor}_{points}.pickle"
+RESULTS_FILE = "classification_results/{scale}_{detector}_{descriptor}_{points}.txt"
+
+def init_detectors(scale, detector):
+    """
+    Returns the detector function.
+
+    Keyword arguments:
+    scale -- the scale of the detector
+    detector -- the detector to use
+    """
+    print("\n\tInitializing detector...")
+    if scale == "multiscale":
+        if detector == "harris":
+            detector = lambda video, points: MultiscaleDetector(lambda video, sigma, tau:
+                                                                HarrisDetector(video, 2, sigma, tau, kappa=0.005, threshold=0.05, num_points=points),
+                                                                video, [3*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
+        elif detector == "gabor":
+            detector = lambda video, points: MultiscaleDetector(lambda video, sigma, tau:
+                                                                GaborDetector(video, sigma, tau, threshold=0.5, num_points=points),
+                                                                video, [3*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
+        else:
+            raise ValueError("DETECTOR must be either 'harris' or 'gabor'")
+    elif scale == "uniscale":
+        if detector == "harris":
+            detector = lambda video, points: HarrisDetector(video, s=2, sigma=4, tau=1.5,
+                                                            kappa=0.005, threshold=0.05, num_points=points)
+        elif detector == "gabor":
+            detector = lambda video, points: GaborDetector(video, sigma=4, tau=1.5,
+                                                           threshold=0.25, num_points=points)
+        else:
+            raise ValueError("DETECTOR must be either 'harris' or 'gabor'")
+    print("\tFinished ...")
+    return detector
+
+def init_descriptors(descriptor):
+    """
+    Returns the get_descriptors function.
+    
+    Keyword arguments:
+    descriptor -- the descriptor to use
+    """
+    print("\n\tInitializing descriptor...")
+    if descriptor == "hog":
+        get_descriptors = lambda video, points: get_hog_descriptors(video, points, nbins=NBINS)
+    elif descriptor == "hof":
+        get_descriptors = lambda video, points: get_hof_descriptors(video, points, nbins=NBINS)
+    elif descriptor == "hog_hof":
+        get_descriptors = lambda video, points: get_hog_hof(video, points, nbins=NBINS)
     else:
-        raise ValueError("SCALE must be either 'uniscale' or 'multiscale'")
+        raise ValueError("DESCRIPTOR must be either 'hog', 'hof' or 'hog_hof'")
+    print("\tFinished ...")
+    return get_descriptors
+
+def get_names():
+    """
+    Returns the train and test names.
+    If train_names.txt and test_names.txt exist,
+    it loads them.
+    Otherwise, it creates them.
+    """
+    print("\n\tGetting names...")
     # check if train_names.txt and test_names.txt exist
     # if they exist, load them:
     if os.path.exists(TRAIN_NAMES_FILE) and os.path.exists(TEST_NAMES_FILE):
@@ -54,121 +114,87 @@ if __name__ == "__main__":
             f.write("\n".join(train_names))
         with open(TEST_NAMES_FILE, "w") as f:
             f.write("\n".join(test_names))
+    print("\tFinished ...")
+    return train_names, test_names
 
+def extract_descriptors(names, detector, get_descriptors, points):
+    """
+    Extracts the descriptors from the videos.
+    
+    Keyword arguments:
+    names -- the names of the videos
+    detector -- the detector to use
+    get_descriptors -- the descriptor to use
+    points -- the number of points to use
+    """
+    print("\n\tExtracting descriptors...")
+    descriptors = []
+    for name in names:
+        video = read_video(name, NUM_FRAMES, 0)
+        interest = detector(video, points)
+        descs = get_descriptors(video, interest)
+        descriptors.append(descs)
+    print("\tChecking if all descriptors have the same shape...")
+    original_shape = descriptors[0].shape
+    print(f"\toriginal_shape: {original_shape}")
+    for index, descriptor in enumerate(descriptors):
+        if descriptor.shape != original_shape:
+            raise ValueError(f"All descriptors must have the same shape. Descriptor {index} has shape {descriptor.shape}")
+    print("\tFinished ...")
+    return descriptors
+
+def run_test(scale, detector, descriptor, points):
+    """
+    Runs the test for the current parameters.
+    
+    Saves the descriptors in a pickle file.
+    Saves the results in a text file.
+
+    Keyword arguments:
+    scale -- the scale of the detector
+    detector -- the detector to use
+    descriptor -- the descriptor to use
+    points -- the number of points to use
+    """
+    # FIXME: function has the same variable as its name
+    # it messes up the filenames later on
+    fun_detector = init_detectors(scale, detector)
+    get_descriptors = init_descriptors(descriptor)
+    train_names, test_names = get_names()
+    
     # Define a dictionary for label mappings
-    label_mappings = {
-        "handwaving": 0,
-        "running": 1,
-        "walking": 2
-    }
+    label_mappings = { "handwaving": 0, "running": 1, "walking": 2 }
 
-    # Generate train_labels using list comprehension
+    # Generate test_labels
+    test_labels = [label_mappings[name.split("_")[1]] for name in test_names]
+    # Generate train_labels
     train_labels = [label_mappings[name.split("_")[1]] for name in train_names]
 
-    # Generate test_labels using list comprehension
-    test_labels = [label_mappings[name.split("_")[1]] for name in test_names]
+    # Extract descriptors
+    test_descriptors = extract_descriptors(test_names, fun_detector, get_descriptors, points)
+    train_descriptors = extract_descriptors(train_names, fun_detector, get_descriptors, points)
 
-    # if descriptors.pickle exists, load it
-    if os.path.exists(DESCRIPTORS_FILE):
-        with open(DESCRIPTORS_FILE, "rb") as f:
-            descriptors = pickle.load(f)
-        hogs_train_gabor  = descriptors["hogs_train_gabor" ]
-        hofs_train_gabor  = descriptors["hofs_train_gabor" ]
-        hogs_train_harris = descriptors["hogs_train_harris"]
-        hofs_train_harris = descriptors["hofs_train_harris"]
-        hogs_test_gabor   = descriptors["hogs_test_gabor"  ]
-        hofs_test_gabor   = descriptors["hofs_test_gabor"  ]
-        hogs_test_harris  = descriptors["hogs_test_harris" ]
-        hofs_test_harris  = descriptors["hofs_test_harris" ]
-    # otherwise, create it
-    else:
-        # create the descriptors
-        hogs_train_gabor,  hofs_train_gabor    = [], []
-        hogs_train_harris, hofs_train_harris   = [], []
-        hogs_test_gabor,   hofs_test_gabor     = [], []
-        hogs_test_harris,  hofs_test_harris    = [], []
-        print("Computing train descriptors...")
-        for index, video_name in enumerate(train_names):
-            print(f"\t{index} / {len(train_names)}")
-            video = read_video(video_name, NUM_FRAMES, 0)
-            
-            print("\tfinding interest points with gabor...")
-            gabor_points = gabor(video)
-            print("\tfinished")
-            print("\tfinding descriptors...")
-            hogs, hofs = get_hog_hof(video, gabor_points, nbins=10)
-            print("\tfinished")
-            hogs_train_gabor.append(hogs)
-            hofs_train_gabor.append(hofs)
+    # train and test
+    bow_train, bow_test = bag_of_words(train_descriptors, test_descriptors, num_centers=50)
+    accuracy, pred = svm_train_test(bow_train, train_labels, bow_test, test_labels)
+    with open(RESULTS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "w") as f:
+        f.write("Accuracy: {accuracy}\n".format(accuracy=accuracy))
+        f.write("Predictions: {pred}\n".format(pred=pred))
+        f.write("Test labels: {test_labels}\n".format(test_labels=test_labels))
 
-            print("\tfinding interest points with harris...")
-            harris_points = harris(video)
-            print("\tfinished")
-            print("\tfinding descriptors...")
-            hogs, hofs = get_hog_hof(video, harris_points, nbins=10)
-            print("\tfinished")
-            hogs_train_harris.append(hogs)
-            hofs_train_harris.append(hofs)
+    with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "wb") as f:
+        pickle.dump((bow_train, bow_test, train_labels, test_labels), f)
 
-        print("Computing test descriptors...")
-        for index, video_name in enumerate(test_names):
-            print(f"\t{index} / {len(test_names)}")
-            video = read_video(video_name, NUM_FRAMES, 0)
-            print("\tfinding interest points with gabor...")
-            gabor_points = gabor(video)
-            print("\tfinished")
-            print("\tfinding descriptors...")
-            hogs, hofs = get_hog_hof(video, gabor_points, nbins=10)
-            print("\tfinished")
-            hogs_test_gabor.append(hogs)
-            hofs_test_gabor.append(hofs)
-            print("\tfinding interest points with harris...")
-            harris_points = harris(video)
-            print("\tfinished")
-            print("\tfinding descriptors...")
-            hogs, hofs = get_hog_hof(video, harris_points, nbins=10)
-            print("\tfinished")
-            hogs_test_harris.append(hogs)
-            hofs_test_harris.append(hofs)
-        # save the descriptors
-        print("Saving descriptors...")
-        with open(DESCRIPTORS_FILE, "wb") as f:
-            pickle.dump({"hogs_train_gabor": hogs_train_gabor,
-                         "hofs_train_gabor": hofs_train_gabor,
-                         "hogs_train_harris": hogs_train_harris,
-                         "hofs_train_harris": hofs_train_harris,
-                         "hogs_test_gabor": hogs_test_gabor,
-                         "hofs_test_gabor": hofs_test_gabor,
-                         "hogs_test_harris": hogs_test_harris,
-                         "hofs_test_harris": hofs_test_harris}, f)
+def main():
+    # perform the test for every combination of parameters
+    for scale in PARAMETERS["scale"]:
+        for detector in PARAMETERS["detector"]:
+            for descriptor in PARAMETERS["descriptor"]:
+                for points in PARAMETERS["points"]:                    
+                    # run the test
+                    print(f"Test: scale={scale}, detector={detector}, descriptor={descriptor}, points={points}")
+                    run_test(scale, detector, descriptor, points)
 
-    # for each method (gabor, harris)
-    # try with different combinations
-    # (hog, hof, hog+hof)
-    # and print the results in a file
-    print("Training and testing...")
-    for train, test, method in zip([hogs_train_gabor, hofs_train_gabor,
-                                    [np.concatenate((hogs, hofs)) for hogs, hofs in zip(hogs_train_gabor, hofs_train_gabor)],
-                                    hogs_train_harris, hofs_train_harris,
-                                    [np.concatenate((hogs, hofs)) for hogs, hofs in zip(hogs_train_harris, hofs_train_harris)]],
-                                   [hogs_test_gabor, hofs_test_gabor,
-                                    [np.concatenate((hogs, hofs)) for hogs, hofs in zip(hogs_test_gabor, hofs_test_gabor)],
-                                    hogs_test_harris, hofs_test_harris,
-                                    [np.concatenate((hogs, hofs)) for hogs, hofs in zip(hogs_test_harris, hofs_test_harris)]],
-                                   ["gabor_hog", "gabor_hof", "gabor_hog_hof",
-                                    "harris_hog", "harris_hof", "harris_hog_hof"]):
-        # print method, train and test
-        # for debugging purposes
-        print(method)
-        print(len(train), len(test))
-        print(f"train shape: {train[0].shape}")
-        print(f"test shape: {test[0].shape}")
-        bow_train, bow_test = bag_of_words(train, test, num_centers=50)
-        accuracy, pred = svm_train_test(bow_train, train_labels, bow_test, test_labels)
-        # print results in file
-        with open(RESULTS_FILE.format(scale=SCALE, method=method), "a") as f:
-            f.write(f"Accuracy: {accuracy}\n")
-            f.write(f"Predictions: {pred}\n")
-            f.write(f"True labels: {test_labels}\n")
-            f.write("\n")
 
+if __name__ == "__main__":
+    main()
