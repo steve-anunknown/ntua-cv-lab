@@ -4,7 +4,6 @@ import numpy as np
 import scipy.ndimage as scp
 from cv23_lab2_2_utils import orientation_histogram
 
-
 def video_gradients(video):
     """
     Compute the gradients of a video.
@@ -70,7 +69,7 @@ def interest_points(response, num, threshold, scale):
     top_points = points[sorted_indices[:num]]
     return top_points
 
-def HarrisDetector(v, s, sigma, tau, kappa, threshold):
+def HarrisDetector(v, s, sigma, tau, kappa, threshold, num_points):
     """
     Harris Corner Detector
     
@@ -109,10 +108,10 @@ def HarrisDetector(v, s, sigma, tau, kappa, threshold):
     det = Lxx*(Lyy*Ltt - Lyt*Lyt) - Lxy*(Lxy*Ltt - Lyt*Lxt) + Lxt*(Lxy*Lyt - Lyy*Lxt)
     response = (det - kappa * trace * trace * trace)
     # find interest points
-    points = interest_points(response, num=500, threshold=threshold, scale=sigma)
+    points = interest_points(response, num=num_points, threshold=threshold, scale=sigma)
     return points
 
-def GaborDetector(v, sigma, tau, threshold):
+def GaborDetector(v, sigma, tau, threshold, num_points):
     """
     Gabor Detector
     
@@ -137,10 +136,10 @@ def GaborDetector(v, sigma, tau, threshold):
     h_od /= np.linalg.norm(h_od, ord=1)
     # compute the response
     response = (scp.convolve1d(video, h_ev, axis=2) ** 2) + (scp.convolve1d(video, h_od, axis=2) ** 2)
-    points = interest_points(response, num=500, threshold=threshold, scale=sigma)
+    points = interest_points(response, num=num_points, threshold=threshold, scale=sigma)
     return points
 
-def MultiscaleDetector(detector, video, sigmas, tau):
+def MultiscaleDetector(detector, video, sigmas, tau, num_points):
     """
     Multiscale Detector
 
@@ -162,9 +161,9 @@ def MultiscaleDetector(detector, video, sigmas, tau):
     for sigm in sigmas:
         found = detector(video, sigm, tau)
         points.append(found)
-    return LogMetricFilter(video, points, tau)
+    return LogMetricFilter(video, points, tau, num_points)
 
-def LogMetricFilter(video, points_per_scale, tau):
+def LogMetricFilter(video, points_per_scale, tau, num_points):
     """
     Filters interest points according to the log metric
     
@@ -178,6 +177,7 @@ def LogMetricFilter(video, points_per_scale, tau):
         # the log metric in a neighborhood of 3 scales
         # (prev scale), (curr scale), (next scale)
         final = []
+        final_logs = []
         for index, items in enumerate(itemsperscale):
             logp = logs[max(index-1,0)]
             logc = logs[index]
@@ -189,7 +189,12 @@ def LogMetricFilter(video, points_per_scale, tau):
                 next = logn[x, y, t]
                 if (curr >= prev) and (curr >= next):
                     final.append(triplet)
-        return np.array(final)
+                    final_logs.append(curr)
+        # get the points with top num_points log metric values
+        if len(final) > num_points:
+            indices = np.argsort(final_logs)[::-1]
+            final_points = [final[i] for i in indices[:num_points]]
+        return np.array(final_points)
     v = video.copy()
     vnorm = v.astype(float)/video.max()
     # compute the laplacian of gaussian (log) metric
@@ -214,7 +219,7 @@ def LogMetricFilter(video, points_per_scale, tau):
     # find the points that maximize the log metric
     return LogMetric(logs, points_per_scale, len(points_per_scale))
 
-def get_hog_descriptors(video, interest_points, sigma, nbins):
+def get_hog_descriptors(video, interest_points, nbins):
     """
     Compute the HOG descriptors of a video.
     
@@ -228,18 +233,19 @@ def get_hog_descriptors(video, interest_points, sigma, nbins):
     Ly, Lx, _ = video_gradients(video.astype(float))
     descriptors = []
     for point in interest_points:
-        side = int(round(4*point[3]))
-        leftmost = int(max(0, point[0]-side))
+        side      = int(round(4*point[3]))
+        leftmost  = int(max(0,                point[0]-side))
         rightmost = int(min(video.shape[1]-1, point[0]+side+1))
-        upmost = int(max(0, point[1]-side))
-        downmost = int(min(video.shape[0]-1, point[1]+side+1))
+        upmost    = int(max(0,                point[1]-side))
+        downmost  = int(min(video.shape[0]-1, point[1]+side+1))
+        
         descriptor = orientation_histogram(Lx[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            Ly[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)
 
-def get_hof_descriptors(video, interest_points, sigma, nbins):
+def get_hof_descriptors(video, interest_points, nbins):
     """
     Compute the HOF descriptors of a video.
     
@@ -252,19 +258,20 @@ def get_hof_descriptors(video, interest_points, sigma, nbins):
     oflow = cv2.DualTVL1OpticalFlow_create(nscales=1)
     descriptors = []
     for point in interest_points:
-        side = int(round(4*point[3]))
-        leftmost = int(max(0, point[0]-side))
+        side      = int(round(4*point[3]))
+        leftmost  = int(max(0,                point[0]-side))
         rightmost = int(min(video.shape[1]-1, point[0]+side+1))
-        upmost = int(max(0, point[1]-side))
-        downmost = int(min(video.shape[0]-1, point[1]+side+1))
-        flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, int(point[2])],
+        upmost    = int(max(0,                point[1]-side))
+        downmost  = int(min(video.shape[0]-1, point[1]+side+1))
+        
+        flow = oflow.calc(video[upmost:downmost, leftmost:rightmost, int(point[2]-1)],
                           video[upmost:downmost, leftmost:rightmost, int(point[2])], None)
-        descriptor = orientation_histogram(flow[...,0], flow[...,1], nbins, np.array([side, side]))
+        descriptor = orientation_histogram(flow[...,0], flow[...,1],
+                                           nbins, np.array([side, side]))
         descriptors.append(descriptor)
     return np.array(descriptors)
 
-
-def get_hog_hof(video, interest_points, sigma, nbins):
+def get_hog_hof(video, interest_points, nbins):
     """
     Compute the HOG and HOF descriptors of a video.
     
@@ -274,9 +281,11 @@ def get_hog_hof(video, interest_points, sigma, nbins):
     sigma -- Gaussian kernel space standard deviation
     nbins -- number of bins
     """
-    hog = get_hog_descriptors(video, interest_points, sigma, nbins)
-    hof = get_hof_descriptors(video, interest_points, sigma, nbins)
-    return hog, hof
+    hog = get_hog_descriptors(video, interest_points, nbins)
+    print("HOG: ", hog.shape)
+    hof = get_hof_descriptors(video, interest_points, nbins)
+    print("HOF: ", hof.shape)
+    return np.concatenate((hog, hof))
         
     
 
