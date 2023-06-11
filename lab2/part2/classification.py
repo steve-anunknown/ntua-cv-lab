@@ -18,7 +18,7 @@ VIDEO_FOLDER = "SpatioTemporal/{label}"
 # each test is a dictionary with keys:
 # scale, detector, descriptor, points
 PARAMETERS = {
-    "scale": ["uniscale", "multiscale"],
+    "scale": ["uniscale"],
     "detector": ["gabor", "harris"],
     "descriptor": ["hog_hof", "hog", "hof"],
     "points": [500]
@@ -39,11 +39,11 @@ def init_detectors(scale, detector):
         if detector == "harris":
             detector = lambda video, points: MultiscaleDetector(lambda video, sigma, tau:
                                                                 HarrisDetector(video, 2, sigma, tau, kappa=0.005, threshold=0.05, num_points=points),
-                                                                video, [3*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
+                                                                video, [4*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
         elif detector == "gabor":
             detector = lambda video, points: MultiscaleDetector(lambda video, sigma, tau:
-                                                                GaborDetector(video, sigma, tau, threshold=0.5, num_points=points),
-                                                                video, [3*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
+                                                                GaborDetector(video, sigma, tau, threshold=0.25, num_points=points),
+                                                                video, [4*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
         else:
             raise ValueError("DETECTOR must be either 'harris' or 'gabor'")
     elif scale == "uniscale":
@@ -167,7 +167,7 @@ def run_test(scale, detector, descriptor, points):
     test_labels = [label_mappings[name.split("_")[1]] for name in test_names]
     # Generate train_labels
     train_labels = [label_mappings[name.split("_")[1]] for name in train_names]
-    
+
     # check if descriptors have already been computed
     if os.path.exists(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points)):
         print("\n\tLoading descriptors...")
