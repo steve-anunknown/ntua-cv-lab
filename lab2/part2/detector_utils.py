@@ -194,7 +194,9 @@ def LogMetricFilter(video, points_per_scale, tau, num_points):
         if len(final) > num_points:
             indices = np.argsort(final_logs)[::-1]
             final_points = [final[i] for i in indices[:num_points]]
-        return np.array(final_points)
+            return np.array(final_points)
+        else:
+            return np.array(final)
     v = video.copy()
     vnorm = v.astype(float)/video.max()
     # compute the laplacian of gaussian (log) metric
