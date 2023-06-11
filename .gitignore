@@ -8,5 +8,7 @@ SpatioTemporal
 kodikas_diagrammata.txt
 alternative_harris.py
 *.pyc
+*.dat
 makegif.py
 descriptors*
+classification_descriptors
