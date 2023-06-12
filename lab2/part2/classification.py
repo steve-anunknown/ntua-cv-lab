@@ -17,12 +17,14 @@ VIDEO_FOLDER = "SpatioTemporal/{label}"
 # define dictionary for multiple tests
 # each test is a dictionary with keys:
 # scale, detector, descriptor, points
+
 PARAMETERS = {
     "scale": ["uniscale"],
     "detector": ["gabor", "harris"],
     "descriptor": ["hog_hof", "hog", "hof"],
-    "points": [500]
+    "points": [500] # if we want to test more points, we have to lower the thresholds.
 }
+
 DESCRIPTORS_FILE = "classification_descriptors/{scale}_{detector}_{descriptor}_{points}.pickle"
 RESULTS_FILE = "classification_results/{scale}_{detector}_{descriptor}_{points}.txt"
 
