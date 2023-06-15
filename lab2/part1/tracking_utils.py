@@ -182,8 +182,8 @@ def displ(dx, dy, threshold):
 def makegif(path, name):
   images = []
   for i in range(1, 69):
-    print(path + str(i) + '.png')
-    img = cv2.imread(path + str(i) + '.png',1)
+    print(path + str(i+1) + '.png')
+    img = cv2.imread(path + str(i+1) + '.png',1)
     #check if image is empty
     if img is None:
       print('Image is empty')

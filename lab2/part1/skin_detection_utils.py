@@ -1,7 +1,9 @@
 import cv2
+import os
 import numpy as np
 from scipy import stats
 from scipy import ndimage
+import matplotlib.pyplot as plt
 
 SKIN_THRESHOLD = 0.05
 
@@ -38,6 +40,16 @@ def fd(image, mean, covariance):
     # normalize the probability. i'm not sure why.
     skin_image = (distribution.pdf(pixels)/np.max(distribution.pdf(pixels)) >= SKIN_THRESHOLD).astype('uint8')
 
+    # save the binary skin image
+    plt.imshow(skin_image)
+    plt.title("Binary skin image before morphological operations")
+    # check if the results folder exists
+    # if not, create it
+    if not os.path.exists("results"):
+        os.makedirs("results")
+    plt.savefig("results/binary_skin_image.png")
+    
+
     # the skin image probably has holes
     # we will attempt to close them by performing
     # the opening with a small structural element and
@@ -46,6 +58,14 @@ def fd(image, mean, covariance):
     closing_strel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (19, 19))
     skin_image = cv2.morphologyEx(skin_image, cv2.MORPH_OPEN, opening_strel)
     skin_image = cv2.morphologyEx(skin_image, cv2.MORPH_CLOSE, closing_strel)
+
+    # save the binary skin image
+    plt.imshow(skin_image)
+    plt.title("Binary skin image after morphological operations")
+    plt.savefig("results/binary_skin_image_better.png")
+    # close the figure
+    plt.close()
+
     # find the connected components
     # and return the bounding boxes of the
     # connected components

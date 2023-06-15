@@ -57,8 +57,13 @@ if __name__ == "__main__":
             features = np.squeeze(cv2.goodFeaturesToTrack(cropped2, feats, 0.05, 5).astype(int))
             [dx, dy] = lk(cropped1, cropped2, features, 2, 0.01, dx0, dy0)
             
-            # compute the flow
-            [flowx, flowy] = displ(dx, dy, 0.7) 
+            # compute the flow using the opencv method tv-l1
+            
+            optical_flow = cv2.DualTVL1OpticalFlow_create()
+            flow = optical_flow.calc(cropped1, cropped2, None)
+            flowx = flow[:, :, 0]
+            flowy = flow[:, :, 1]
+
             
             # update the boundaries
             x = int(round(x - flowx))
@@ -80,8 +85,8 @@ if __name__ == "__main__":
             plt.imshow(image_plot)
             plt.title(f"Frame {i+1}")
         plt.tight_layout()
-        # save the figure
-        plt.savefig(f"flow/n_{i+1}.png")
+        # show the image
+        plt.show()
     # makegif("flow/", "flow.gif")
 
 

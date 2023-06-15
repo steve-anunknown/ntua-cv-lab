@@ -8,6 +8,8 @@ import numpy as np
 import scipy.io
 import cv2
 
+AWESOME = False
+
 if __name__ == "__main__":
     feats = 20
     padding = 20
@@ -35,16 +37,17 @@ if __name__ == "__main__":
         # the "part1-GreekSignLanguage" folder.
         image1 = cv2.imread(f"part1-GreekSignLanguage/{i}.png")
         image2 = cv2.imread(f"part1-GreekSignLanguage/{i+1}.png")
+        image_plot = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
         gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
         gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
 
-
-        fig, axs = plt.subplots(2, 3)
-        axindices = {0: (0, 1), 1: (1, 2), 2: (1, 0)}
-        for j in range(2):
-            for k in range(3):
-                if (j, k) not in axindices.values():
-                    axs[j, k].axis("off")
+        if AWESOME:
+            fig, axs = plt.subplots(2, 3)
+            axindices = {0: (0, 1), 1: (1, 2), 2: (1, 0)}
+            for j in range(2):
+                for k in range(3):
+                    if (j, k) not in axindices.values():
+                        axs[j, k].axis("off")
         for index, boundary in enumerate(boundaries):
             y, x, h, w = boundary
             # crop the image to retain only the pixels
@@ -62,18 +65,22 @@ if __name__ == "__main__":
             boundaries[index] = (y, x, h, w)
             
             # show the new boundaries
-            cv2.rectangle(image1, (x, y), (x + w, y + h), colours[index], 2)
+            cv2.rectangle(image_plot, (x, y), (x + w, y + h), colours[index], 2)
             
             # plot the flow like a gradient field
-            features = np.squeeze(cv2.goodFeaturesToTrack(cropped2, feats, 0.05, 5).astype(int))
-            axs[axindices[index]].quiver(features[:, 0], features[:, 1], -dx, -dy, angles='xy')
-            axs[axindices[index]].set_title(f"Optical flow for {names[index]}")
-
-        axs[1, 1].imshow(image1)
-        axs[1, 1].set_title(f"Frame {i}")
+            if AWESOME:
+                features = np.squeeze(cv2.goodFeaturesToTrack(cropped2, feats, 0.05, 5).astype(int))
+                axs[axindices[index]].quiver(features[:, 0], features[:, 1], -dx, -dy, angles='xy')
+                axs[axindices[index]].set_title(f"Optical flow for {names[index]}")
+        if AWESOME:
+            axs[1, 1].imshow(image_plot)
+            axs[1, 1].set_title(f"Frame {i}")
+        else:
+            plt.imshow(image_plot)
+            plt.title(f"Frame {i}")
         plt.tight_layout()
         # save the figure
-        plt.savefig(f"flow_multiscale/{i}.png")
-    makegif("flow_multiscale/", "flow_multiscale.gif")
+        plt.savefig(f"flow_multiscale/n_{i}.png")
+    # makegif("flow_multiscale/", "flow_multiscale.gif")
 
 
