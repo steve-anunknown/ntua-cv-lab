@@ -2,7 +2,7 @@ import os
 import numpy as np
 import random
 import pickle
-from memory_profiler import profile
+from itertools import product
 from detector_utils import get_hog_hof, get_hof_descriptors, get_hog_descriptors, GaborDetector, HarrisDetector, MultiscaleDetector
 from cv23_lab2_2_utils import bag_of_words, read_video, svm_train_test
 
@@ -19,7 +19,7 @@ VIDEO_FOLDER = "SpatioTemporal/{label}"
 # scale, detector, descriptor, points
 
 PARAMETERS = {
-    "scale": ["uniscale"],
+    "scale": ["multiscale"],
     "detector": ["gabor", "harris"],
     "descriptor": ["hog_hof", "hog", "hof"],
     "points": [500] # if we want to test more points, we have to lower the thresholds.
@@ -41,11 +41,11 @@ def init_detectors(scale, detector):
         if detector == "harris":
             detector = lambda video, points: MultiscaleDetector(lambda video, sigma, tau:
                                                                 HarrisDetector(video, 2, sigma, tau, kappa=0.005, threshold=0.05, num_points=points),
-                                                                video, [4*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
+                                                                video, [4*(1.1**i) for i in range(8)], tau=1.5, num_points=points)
         elif detector == "gabor":
             detector = lambda video, points: MultiscaleDetector(lambda video, sigma, tau:
-                                                                GaborDetector(video, sigma, tau, threshold=0.25, num_points=points),
-                                                                video, [4*(1.1**i) for i in range(6)], tau=1.5, num_points=points)
+                                                                GaborDetector(video, sigma, tau, threshold=0.1, num_points=points),
+                                                                video, [4*(1.1**i) for i in range(8)], tau=1.5, num_points=points)
         else:
             raise ValueError("DETECTOR must be either 'harris' or 'gabor'")
     elif scale == "uniscale":
@@ -171,9 +171,11 @@ def run_test(scale, detector, descriptor, points):
     train_labels = [label_mappings[name.split("_")[1]] for name in train_names]
 
     # check if descriptors have already been computed
-    if os.path.exists(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points)):
+    if os.path.exists(DESCRIPTORS_FILE.format(scale=scale, detector=detector,
+                                              descriptor=descriptor, points=points)):
         print("\n\tLoading descriptors...")
-        with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "rb") as f:
+        with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, 
+                                          descriptor=descriptor, points=points), "rb") as f:
             descriptors = pickle.load(f)
         test_descriptors = descriptors["test"]
         train_descriptors = descriptors["train"]
@@ -185,23 +187,24 @@ def run_test(scale, detector, descriptor, points):
     # train and test
     bow_train, bow_test = bag_of_words(train_descriptors, test_descriptors, num_centers=50)
     accuracy, pred = svm_train_test(bow_train, train_labels, bow_test, test_labels)
-    with open(RESULTS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "w") as f:
+    with open(RESULTS_FILE.format(scale=scale, detector=detector, 
+                                  descriptor=descriptor, points=points), "w") as f:
         f.write("Accuracy: {accuracy}\n".format(accuracy=accuracy))
         f.write("Predictions: {pred}\n".format(pred=pred))
         f.write("Test labels: {test_labels}\n".format(test_labels=test_labels))
 
-    with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, descriptor=descriptor, points=points), "wb") as f:
+    with open(DESCRIPTORS_FILE.format(scale=scale, detector=detector, 
+                                      descriptor=descriptor, points=points), "wb") as f:
         pickle.dump({"test": test_descriptors, "train": train_descriptors}, f)
 
 def main():
-    # perform the test for every combination of parameters
-    for scale in PARAMETERS["scale"]:
-        for detector in PARAMETERS["detector"]:
-            for descriptor in PARAMETERS["descriptor"]:
-                for points in PARAMETERS["points"]:                    
-                    # run the test
-                    print(f"Test: scale={scale}, detector={detector}, descriptor={descriptor}, points={points}")
-                    run_test(scale, detector, descriptor, points)
+    keys = PARAMETERS.keys()
+    combinations = product(*[PARAMETERS[key] for key in keys])
+    for combination in combinations:
+        scale, detector, descriptor, points = combination
+        # run the test
+        print(f"Test: scale={scale}, detector={detector}, descriptor={descriptor}, points={points}")
+        run_test(scale, detector, descriptor, points)
 
 
 if __name__ == "__main__":

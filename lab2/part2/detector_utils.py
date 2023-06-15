@@ -245,7 +245,7 @@ def get_hog_descriptors(video, interest_points, nbins):
                                            Ly[upmost:downmost, leftmost:rightmost, int(point[2])],
                                            nbins, np.array([side, side]))
         descriptors.append(descriptor)
-    return np.array(descriptors)
+    return np.array(descriptors, dtype=object)
 
 def get_hof_descriptors(video, interest_points, nbins):
     """
@@ -271,7 +271,7 @@ def get_hof_descriptors(video, interest_points, nbins):
         descriptor = orientation_histogram(flow[...,0], flow[...,1],
                                            nbins, np.array([side, side]))
         descriptors.append(descriptor)
-    return np.array(descriptors)
+    return np.array(descriptors, dtype=object)
 
 def get_hog_hof(video, interest_points, nbins):
     """
