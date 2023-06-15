@@ -31,6 +31,11 @@ def combine_images(img1, img2, H):
     T = np.array([[1, 0, -x_min], [0, 1, -y_min], [0, 0, 1]], dtype=np.float32)
     
     output = cv2.warpPerspective(img1, T.dot(H), (x_max-x_min, y_max-y_min))
+    # show warped image
+    plt.imshow(output)
+    plt.show()
+    cv2.imwrite('StichingResults/warped.jpg', output)
+    exit()
     output[-y_min:img2.shape[0]-y_min, -x_min:img2.shape[1]-x_min] = img2
     
     return output
@@ -93,6 +98,7 @@ def mergeWarpedImages(img1_warped, img2, img1_topleft_coords):
     # Step2: Compute the merged image by applying the translation matrix
     # to the warped image and then merging it with the second image
     merged_img = cv2.warpPerspective(img1_warped, T, (img2.shape[1], img2.shape[0]))
+
     merged_img[0:img2.shape[0], 0:img2.shape[1]] = img2
 
     return merged_img
@@ -134,7 +140,6 @@ def stitchImages(img1, img2, match = 'bf'):
             good.append(m)
     matches = good
 
-    
     points1 = np.float32([points1[m.queryIdx] for m in matches]).reshape(-1, 1, 2)
     points2 = np.float32([points2[m.trainIdx] for m in matches]).reshape(-1, 1, 2)
 
