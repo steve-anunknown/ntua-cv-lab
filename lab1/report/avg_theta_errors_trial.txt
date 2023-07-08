@@ -1,0 +1,10 @@
+featuresSURF, CornerDetection :	[1.155 0.623 9.011]
+featuresSURF, HarrisLaplacian :	[0.07  0.203 0.146]	 BEST
+featuresSURF, BlobDetection :	[1.39  1.457 6.258]
+featuresSURF, HessianLaplacian :	[0.072 0.152 0.193]
+featuresSURF, BoxLaplacian :	[8.241 5.358 1.018]
+featuresHOG, CornerDetection :	[28.653 21.152 25.891]
+featuresHOG, HarrisLaplacian :	[23.278 16.421 24.032]
+featuresHOG, BlobDetection :	[28.587 43.324 18.595]
+featuresHOG, HessianLaplacian :	[16.9   24.7   25.623]
+featuresHOG, BoxLaplacian :	[22.649 35.67  26.149]

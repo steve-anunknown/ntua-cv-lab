@@ -1,0 +1,1 @@
+BlobDetection featuresHOG: 66.345
