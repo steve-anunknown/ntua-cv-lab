@@ -1,6 +1,6 @@
 # ntua-cv-lab
 
-This is a private repository for the version control of the lab projects of the Computer Vision course of ECE NTUA
+This used to be a private repository for the version control of the lab projects of the Computer Vision course of ECE NTUA
 
 In order for the code to be properly run, the scripts have to executed in an environment with opencv, numpy, scikit-learn, tqdm, and matplotlib. For jupyter support, jupyter and nb_conda_kernels should also be included. Following is a command to create a virtual environment in conda.
 
